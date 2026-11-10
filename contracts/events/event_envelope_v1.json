@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pulseforge.example/contracts/events/event_envelope_v1.json",
+  "title": "PulseForge Event Envelope v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["event_id", "event_name", "schema_version", "event_time", "user_id", "session_id", "source", "platform", "properties"],
+  "properties": {
+    "event_id": {"type": "string", "minLength": 1},
+    "event_name": {"type": "string", "enum": ["page_view", "search_performed", "product_viewed", "add_to_cart", "checkout_started", "payment_succeeded", "payment_failed", "order_refunded"]},
+    "schema_version": {"const": 1},
+    "event_time": {"type": "string", "format": "date-time"},
+    "ingested_at": {"type": "string", "format": "date-time", "description": "Server-assigned at ingestion; may be absent from producer request"},
+    "user_id": {"type": "string", "minLength": 1},
+    "session_id": {"type": "string", "minLength": 1},
+    "source": {"type": "string", "minLength": 1},
+    "platform": {"type": "string", "minLength": 1},
+    "properties": {"type": "object"}
+  }
+}
