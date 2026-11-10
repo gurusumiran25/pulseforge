@@ -98,3 +98,42 @@ class SQLiteEventStore:
             return None
 
         return EventEnvelope.model_validate_json(row["payload"])
+
+    def insert_events_bulk(self, events):
+        """Insert multiple validated events in one SQLite transaction."""
+        if not events:
+            return {"inserted": 0, "duplicates": 0}
+
+        inserted = 0
+        ingested_at = datetime.now(timezone.utc)
+
+        with self.connect() as connection:
+            for event in events:
+                stored_event = event.model_copy(
+                    update={"ingested_at": ingested_at}
+                )
+
+                cursor = connection.execute(
+                    """
+                    INSERT OR IGNORE INTO events (
+                        event_id, event_name, user_id, session_id,
+                        event_time, ingested_at, payload
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        stored_event.event_id,
+                        stored_event.event_name,
+                        stored_event.user_id,
+                        stored_event.session_id,
+                        stored_event.event_time.isoformat(),
+                        ingested_at.isoformat(),
+                        stored_event.model_dump_json(),
+                    ),
+                )
+
+                inserted += cursor.rowcount
+
+        return {
+            "inserted": inserted,
+            "duplicates": len(events) - inserted,
+        }

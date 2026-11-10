@@ -42,14 +42,9 @@ def ingest_batch(
     events: list[EventEnvelope] = Body(min_length=1, max_length=1000),
     store: SQLiteEventStore = Depends(get_event_store),
 ):
-    inserted_count = 0
-    duplicate_count = 0
-
-    for event in events:
-        if store.insert_event(event):
-            inserted_count += 1
-        else:
-            duplicate_count += 1
+    result = store.insert_events_bulk(events)
+    inserted_count = result["inserted"]
+    duplicate_count = result["duplicates"]
 
     return {
         "status": "processed",
