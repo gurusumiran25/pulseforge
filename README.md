@@ -14,7 +14,7 @@ Phase 0: foundation. No streaming, warehouse, dashboard, or performance claims y
 6. Streamlit dashboard, Docker and CI.
 
 ## Local setup
-Requires Python 3.12+.
+Requires Python 3.10+.
 
 ```bash
 python -m venv .venv
