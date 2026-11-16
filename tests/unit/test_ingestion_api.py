@@ -1,13 +1,25 @@
+from unittest.mock import MagicMock
+
+import pytest
 from fastapi.testclient import TestClient
 
 from services.generator.journey_generator import generate_customer_journey
-from services.ingestion.main import app
+from services.ingestion.main import app, get_event_producer
 
 
-client = TestClient(app)
+@pytest.fixture
+def client():
+    producer = MagicMock()
+    app.dependency_overrides[get_event_producer] = lambda: producer
+
+    try:
+        with TestClient(app) as test_client:
+            yield test_client
+    finally:
+        app.dependency_overrides.pop(get_event_producer, None)
 
 
-def test_health_endpoint():
+def test_health_endpoint(client):
     response = client.get("/health")
 
     assert response.status_code == 200
@@ -17,7 +29,7 @@ def test_health_endpoint():
     }
 
 
-def test_valid_event_is_accepted():
+def test_valid_event_is_accepted(client):
     event = generate_customer_journey(seed=42)[0]
 
     response = client.post(
@@ -28,13 +40,13 @@ def test_valid_event_is_accepted():
     assert response.status_code == 202
 
     body = response.json()
-    assert body["status"] == "stored"
+    assert body["status"] == "accepted"
     assert body["event_id"] == event.event_id
     assert body["event_name"] == "page_view"
     assert "received_at" in body
 
 
-def test_invalid_schema_version_is_rejected():
+def test_invalid_schema_version_is_rejected(client):
     event = generate_customer_journey(seed=42)[0]
     payload = event.model_dump(mode="json")
     payload["schema_version"] = 99
@@ -44,7 +56,7 @@ def test_invalid_schema_version_is_rejected():
     assert response.status_code == 422
 
 
-def test_missing_required_property_is_rejected():
+def test_missing_required_property_is_rejected(client):
     event = generate_customer_journey(seed=42)[0]
     payload = event.model_dump(mode="json")
     payload["properties"] = {}
@@ -54,7 +66,7 @@ def test_missing_required_property_is_rejected():
     assert response.status_code == 422
 
 
-def test_missing_event_id_is_rejected():
+def test_missing_event_id_is_rejected(client):
     event = generate_customer_journey(seed=42)[0]
     payload = event.model_dump(mode="json")
     del payload["event_id"]

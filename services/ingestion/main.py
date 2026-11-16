@@ -1,20 +1,23 @@
+import logging
 from datetime import datetime, timezone
 
-from fastapi import Body, Depends, FastAPI
+from fastapi import Body, Depends, FastAPI, HTTPException
 
 from contracts.event_validation import EventEnvelope
-from services.storage.sqlite_store import SQLiteEventStore
+from services.streaming.producer import PulseForgeProducer
 
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="PulseForge Event Ingestion API",
-    version="0.3.0",
-    description="Validated product analytics ingestion with SQLite persistence",
+    version="0.4.0",
+    description="Validated product analytics ingestion through Redpanda",
 )
 
 
-def get_event_store():
-    return SQLiteEventStore()
+def get_event_producer():
+    return PulseForgeProducer()
 
 
 @app.get("/health")
@@ -25,12 +28,19 @@ def health_check():
 @app.post("/v1/events", status_code=202)
 def ingest_event(
     event: EventEnvelope,
-    store: SQLiteEventStore = Depends(get_event_store),
+    producer: PulseForgeProducer = Depends(get_event_producer),
 ):
-    inserted = store.insert_event(event)
+    try:
+        producer.publish(event)
+    except Exception:
+        logger.exception("Event publication failed: %s", event.event_id)
+        raise HTTPException(
+            status_code=503,
+            detail="Event broker unavailable or delivery unconfirmed",
+        )
 
     return {
-        "status": "stored" if inserted else "duplicate",
+        "status": "accepted",
         "event_id": event.event_id,
         "event_name": event.event_name,
         "received_at": datetime.now(timezone.utc).isoformat(),
@@ -40,15 +50,31 @@ def ingest_event(
 @app.post("/v1/events/batch", status_code=202)
 def ingest_batch(
     events: list[EventEnvelope] = Body(min_length=1, max_length=1000),
-    store: SQLiteEventStore = Depends(get_event_store),
+    producer: PulseForgeProducer = Depends(get_event_producer),
 ):
-    result = store.insert_events_bulk(events)
-    inserted_count = result["inserted"]
-    duplicate_count = result["duplicates"]
+    published = 0
+
+    try:
+        for event in events:
+            producer.publish(event)
+            published += 1
+    except Exception:
+        logger.exception(
+            "Batch publication failed after %s confirmed events",
+            published,
+        )
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "message": "Batch partially published or delivery unconfirmed",
+                "confirmed": published,
+                "requested": len(events),
+                "retry_warning": "Retry may create duplicate Kafka messages",
+            },
+        )
 
     return {
-        "status": "processed",
+        "status": "accepted",
         "received": len(events),
-        "inserted": inserted_count,
-        "duplicates": duplicate_count,
+        "published": published,
     }

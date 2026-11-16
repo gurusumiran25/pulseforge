@@ -1,7 +1,9 @@
+from unittest.mock import MagicMock
+
 from fastapi.testclient import TestClient
 
 from services.generator.journey_generator import generate_customer_journey
-from services.ingestion.main import app, get_event_store
+from services.ingestion.main import app, get_event_producer
 from services.storage.sqlite_store import SQLiteEventStore
 
 
@@ -42,9 +44,9 @@ def test_sqlite_survives_reopening(tmp_path):
     assert reopened_store.get_event(event.event_id) is not None
 
 
-def test_api_persists_event_and_detects_duplicate(tmp_path):
-    store = SQLiteEventStore(tmp_path / "api.db")
-    app.dependency_overrides[get_event_store] = lambda: store
+def test_api_accepts_event_and_replay():
+    producer = MagicMock()
+    app.dependency_overrides[get_event_producer] = lambda: producer
 
     try:
         with TestClient(app) as client:
@@ -55,11 +57,28 @@ def test_api_persists_event_and_detects_duplicate(tmp_path):
             second = client.post("/v1/events", json=payload)
 
             assert first.status_code == 202
-            assert first.json()["status"] == "stored"
-
+            assert first.json()["status"] == "accepted"
             assert second.status_code == 202
-            assert second.json()["status"] == "duplicate"
-
-            assert store.count_events() == 1
+            assert second.json()["status"] == "accepted"
+            assert producer.publish.call_count == 2
     finally:
-        app.dependency_overrides.clear()
+        app.dependency_overrides.pop(get_event_producer, None)
+
+
+def test_api_kafka_failure_returns_503():
+    producer = MagicMock()
+    producer.publish.side_effect = RuntimeError("Kafka unavailable")
+    app.dependency_overrides[get_event_producer] = lambda: producer
+
+    try:
+        with TestClient(app) as client:
+            event = generate_customer_journey(seed=42)[0]
+            response = client.post(
+                "/v1/events",
+                json=event.model_dump(mode="json"),
+            )
+
+            assert response.status_code == 503
+            assert "broker" in response.json()["detail"].lower()
+    finally:
+        app.dependency_overrides.pop(get_event_producer, None)
