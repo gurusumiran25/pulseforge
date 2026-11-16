@@ -70,3 +70,43 @@ def test_lock_released_after_forced_termination(tmp_path):
         if worker.poll() is None:
             worker.kill()
             worker.communicate(timeout=10)
+
+
+import pytest
+
+
+def test_lock_released_after_exception(tmp_path):
+    db = tmp_path / "exception.db"
+
+    with pytest.raises(ValueError, match="intentional"):
+        with execution_lock(db):
+            raise ValueError("intentional")
+
+    with execution_lock(db):
+        pass
+
+
+def test_lock_can_be_acquired_repeatedly(tmp_path):
+    db = tmp_path / "repeated.db"
+
+    for _ in range(5):
+        with execution_lock(db):
+            pass
+
+
+def test_nested_acquisition_is_rejected(tmp_path):
+    db = tmp_path / "nested.db"
+
+    with execution_lock(db):
+        with pytest.raises(SimulationAlreadyRunning):
+            with execution_lock(db):
+                pytest.fail("Nested lock acquisition succeeded")
+
+
+def test_distinct_database_locks_are_independent(tmp_path):
+    first = tmp_path / "first.db"
+    second = tmp_path / "second.db"
+
+    with execution_lock(first):
+        with execution_lock(second):
+            pass
