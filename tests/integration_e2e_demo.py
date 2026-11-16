@@ -1,3 +1,10 @@
+import os
+
+if os.environ.get("PULSEFORGE_LIVE_KAFKA_TESTS") != "I_APPROVE_LIVE_KAFKA_TESTS":
+    raise SystemExit(
+        "STOP: Live Kafka integration requires explicit authorization."
+    )
+
 import tempfile
 import time
 import uuid
@@ -10,13 +17,29 @@ from services.ingestion.main import app, get_event_producer
 from services.streaming.consumer import PulseForgeConsumer
 from services.streaming.producer import PulseForgeProducer
 from services.storage.sqlite_store import SQLiteEventStore
+from tests.kafka_topic_preflight import require_existing_topics
 
 from datetime import datetime, timezone
 
 BROKER = "127.0.0.1:19092"
-TOPIC = "pulseforge.events.test.v1"
 
-run_id = uuid.uuid4().hex
+run_id = os.environ.get("PULSEFORGE_KAFKA_RUN_ID", "")
+
+if not run_id:
+    raise SystemExit(
+        "STOP: PULSEFORGE_KAFKA_RUN_ID must be supplied."
+    )
+
+if (
+    len(run_id) != 32
+    or any(char not in "0123456789abcdef" for char in run_id)
+):
+    raise SystemExit(
+        "STOP: Run ID must be exactly 32 lowercase hexadecimal characters."
+    )
+
+TOPIC = f"pulseforge.integration.e2e.{run_id}"
+DLQ_TOPIC = f"pulseforge.integration.e2e.dlq.{run_id}"
 event = EventEnvelope(
     event_id=f"e2e-{run_id}",
     event_name="page_view",
@@ -29,6 +52,8 @@ event = EventEnvelope(
     properties={"page_path": "/pulseforge-e2e"},
 )
 
+require_existing_topics(BROKER, (TOPIC, DLQ_TOPIC))
+
 with tempfile.TemporaryDirectory() as directory:
     db_path = Path(directory) / "e2e.db"
 
@@ -38,6 +63,7 @@ with tempfile.TemporaryDirectory() as directory:
         group_id=f"pulseforge-e2e-{run_id}",
         db_path=db_path,
         offset_reset="earliest",
+        dlq_topic=DLQ_TOPIC,
     )
 
     producer = PulseForgeProducer(

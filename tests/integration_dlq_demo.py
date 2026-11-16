@@ -1,3 +1,10 @@
+import os
+
+if os.environ.get("PULSEFORGE_LIVE_KAFKA_TESTS") != "I_APPROVE_LIVE_KAFKA_TESTS":
+    raise SystemExit(
+        "STOP: Live Kafka integration requires explicit authorization."
+    )
+
 import base64
 import json
 import tempfile
@@ -9,13 +16,30 @@ from confluent_kafka import Consumer, Producer
 
 from contracts.event_validation import EventEnvelope
 from services.streaming.consumer import PulseForgeConsumer
+from tests.kafka_topic_preflight import require_existing_topics
 
 BROKER = "127.0.0.1:19092"
-TEST_TOPIC = "pulseforge.events.test.v1"
-DLQ_TOPIC = "pulseforge.events.dlq.v1"
 
-run_id = uuid.uuid4().hex
-invalid_payload = b'{"event_id":"invalid-dlq-test"}'
+run_id = os.environ.get("PULSEFORGE_KAFKA_RUN_ID", "")
+
+if not run_id:
+    raise SystemExit(
+        "STOP: PULSEFORGE_KAFKA_RUN_ID must be supplied."
+    )
+
+if (
+    len(run_id) != 32
+    or any(char not in "0123456789abcdef" for char in run_id)
+):
+    raise SystemExit(
+        "STOP: Run ID must be exactly 32 lowercase hexadecimal characters."
+    )
+
+TEST_TOPIC = f"pulseforge.integration.dlq.source.{run_id}"
+DLQ_TOPIC = f"pulseforge.integration.dlq.sink.{run_id}"
+invalid_payload = json.dumps({
+    "event_id": f"invalid-dlq-{run_id}"
+}).encode("utf-8")
 
 valid_event = EventEnvelope(
     event_id=f"dlq-valid-{run_id}",
@@ -28,6 +52,8 @@ valid_event = EventEnvelope(
     platform="web",
     properties={"page_path": "/dlq-test"},
 )
+
+require_existing_topics(BROKER, (TEST_TOPIC, DLQ_TOPIC))
 
 producer = Producer({
     "bootstrap.servers": BROKER,
@@ -70,6 +96,7 @@ with tempfile.TemporaryDirectory() as temp_dir:
         topic=TEST_TOPIC,
         group_id=f"pulseforge-dlq-integration-{run_id}",
         db_path=db_path,
+        dlq_topic=DLQ_TOPIC,
     )
 
     # The test topic may contain earlier messages. Find our two events
