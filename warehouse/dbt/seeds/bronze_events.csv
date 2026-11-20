@@ -1,0 +1,7 @@
+event_id,event_name,session_id,user_id,event_time
+a1,product_viewed,session-a,user-a,2026-11-19 23:55:00
+a2,add_to_cart,session-a,user-a,2026-11-19 23:56:00
+a3,checkout_started,session-a,user-a,2026-11-20 00:01:00
+a4,payment_succeeded,session-a,user-a,2026-11-20 00:02:00
+b1,product_viewed,session-b,user-b,2026-11-20 10:00:00
+c1,page_view,session-c,user-c,2026-11-20 11:00:00
