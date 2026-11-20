@@ -20,8 +20,8 @@ from services.streaming.producer import PulseForgeProducer
 
 
 ENABLED = os.getenv("PULSEFORGE_RUN_BROKER_TESTS") == "1"
-BOOTSTRAP = os.getenv("PULSEFORGE_TEST_BOOTSTRAP", "127.0.0.1:19092")
-LOOPBACK = {"127.0.0.1:19092", "localhost:19092"}
+BOOTSTRAP = os.getenv("PULSEFORGE_TEST_BOOTSTRAP", "127.0.0.1:19093")
+ISOLATED_ENDPOINTS = {"127.0.0.1:19093", "localhost:19093"}
 
 pytestmark = pytest.mark.skipif(
     not ENABLED, reason="Explicit opt-in required: PULSEFORGE_RUN_BROKER_TESTS=1"
@@ -42,8 +42,8 @@ def _receive(consumer, timeout=15):
 
 @pytest.fixture
 def broker_resources(tmp_path):
-    if BOOTSTRAP not in LOOPBACK:
-        pytest.fail("M19 integration tests require the local loopback Redpanda endpoint")
+    if BOOTSTRAP not in ISOLATED_ENDPOINTS:
+        pytest.fail("M19 tests require the dedicated loopback broker on port 19093")
 
     suffix = uuid4().hex
     topic = f"pulseforge.m19.test.{suffix}"
