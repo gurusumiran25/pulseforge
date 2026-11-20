@@ -156,3 +156,101 @@ def test_invalid_event_goes_to_dlq_without_storage(broker_resources):
     finally:
         observer.close()
         consumer.consumer.close()
+
+
+def test_restart_replays_uncommitted_event_without_duplicate_row(
+    broker_resources, monkeypatch
+):
+    """Persist event, simulate failed offset commit, restart same group."""
+    resources = broker_resources
+    event = _event()
+    producer = PulseForgeProducer(
+        bootstrap_servers=BOOTSTRAP, topic=resources["topic"]
+    )
+    first_consumer = _test_consumer(resources)
+    first_consumer.consumer.subscribe([resources["topic"]])
+    try:
+        assert producer.publish(event) == event.event_id
+        first_message = _receive(first_consumer.consumer)
+        first_offset = first_message.offset()
+
+        def fail_commit(_message):
+            raise RuntimeError("simulated offset commit failure")
+
+        # Only the offset commit is injected; actual broker delivery and
+        # SQLite persistence remain real.
+        with monkeypatch.context() as patcher:
+            patcher.setattr(first_consumer, "_commit_checked", fail_commit)
+            with pytest.raises(RuntimeError, match="simulated offset commit"):
+                first_consumer.process_message(first_message)
+
+        assert first_consumer.store.count_events() == 1
+    finally:
+        first_consumer.consumer.close()
+
+    # Same consumer group and same SQLite database after restart.
+    restarted = _test_consumer(resources)
+    restarted.consumer.subscribe([resources["topic"]])
+    try:
+        replay = _receive(restarted.consumer)
+        assert replay.offset() == first_offset
+        assert restarted.process_message(replay) == "duplicate"
+        assert restarted.store.count_events() == 1
+        assert restarted.store.get_event(event.event_id).event_id == event.event_id
+    finally:
+        restarted.consumer.close()
+
+
+def test_restart_replays_invalid_event_after_failed_dlq_commit(
+    broker_resources, monkeypatch
+):
+    """DLQ delivery may repeat when source offset was not committed."""
+    resources = broker_resources
+    invalid = b'{"event_id":"incomplete-replay-event"}'
+    producer = Producer({"bootstrap.servers": BOOTSTRAP, "acks": "all"})
+    first_consumer = _test_consumer(resources)
+    first_consumer.consumer.subscribe([resources["topic"]])
+    try:
+        producer.produce(resources["topic"], value=invalid)
+        assert producer.flush(10) == 0
+        first_message = _receive(first_consumer.consumer)
+        first_offset = first_message.offset()
+
+        def fail_commit(_message):
+            raise RuntimeError("simulated DLQ offset commit failure")
+
+        with monkeypatch.context() as patcher:
+            patcher.setattr(first_consumer, "_commit_checked", fail_commit)
+            with pytest.raises(RuntimeError, match="simulated DLQ offset"):
+                first_consumer.process_message(first_message)
+
+        assert first_consumer.store.count_events() == 0
+    finally:
+        first_consumer.consumer.close()
+
+    restarted = _test_consumer(resources)
+    restarted.consumer.subscribe([resources["topic"]])
+    observer = Consumer({
+        "bootstrap.servers": BOOTSTRAP,
+        "group.id": f"{resources['group']}-replay-observer",
+        "auto.offset.reset": "earliest",
+        "enable.auto.commit": False,
+    })
+    observer.subscribe([resources["dlq"]])
+    try:
+        replay = _receive(restarted.consumer)
+        assert replay.offset() == first_offset
+        assert restarted.process_message(replay) == "dlq"
+        assert restarted.store.count_events() == 0
+
+        # The two DLQ records represent the same source offset. This
+        # documents at-least-once DLQ publication, not exactly-once.
+        first_dlq = json.loads(_receive(observer).value())
+        second_dlq = json.loads(_receive(observer).value())
+        for record in (first_dlq, second_dlq):
+            assert record["original_topic"] == resources["topic"]
+            assert record["original_offset"] == first_offset
+            assert base64.b64decode(record["raw_value_base64"]) == invalid
+    finally:
+        observer.close()
+        restarted.consumer.close()
