@@ -1,0 +1,16 @@
+version: 2
+sources:
+  - name: bronze
+    description: "Synthetic CI seed only; never operational SQLite."
+    schema: main
+    tables:
+      - name: bronze_events
+        description: "One synthetic event per event_id."
+        columns:
+          - name: event_id
+            data_tests:
+              - unique
+              - not_null
+          - name: session_id
+            data_tests:
+              - not_null
