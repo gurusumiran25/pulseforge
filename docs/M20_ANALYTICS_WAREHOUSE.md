@@ -26,3 +26,23 @@ These are exploratory warehouse contracts, **not** a deployed warehouse or compl
 - Existing `INSERT OR IGNORE` event-ID conflict semantics remain unchanged and are tracked for later hardening.
 - Timestamp strings are generated as UTC ISO-8601 by the event contract, but historical data quality must still be checked.
 - No changes are made to streaming, Windows Task Scheduler, existing event storage, or `main`.
+
+## M20.2: Synthetic warehouse verification (implemented; CI pending)
+
+`tests/warehouse/test_m20_warehouse_views.py` uses pytest's `tmp_path` fixture to create a disposable SQLite event store, loads the exact `warehouse/sql/m20_views.sql` definitions, and validates:
+
+1. Silver-layer JSON extraction and row count.
+2. Gold session grain and independently observed funnel flags.
+3. UTC session-start cohort aggregation across midnight.
+4. Duplicate `event_id` suppression in warehouse metrics.
+5. Empty warehouse behavior.
+6. Purchase-stage participation without preceding steps (not a chronological funnel).
+
+The standard `.github/workflows/tests.yml` runs `python -m pytest` on pushes and pull requests, so these tests are included automatically. **A successful M20.2 run is not yet confirmed.**
+
+Run locally without Docker:
+```powershell
+python -m pytest -v tests/warehouse/test_m20_warehouse_views.py
+```
+
+This suite does not mutate any operational database or create persistent test files in the repository.
