@@ -1,0 +1,24 @@
+# M19-only disposable broker. Never use docker-compose.yml for these tests.
+# Run with an explicit project name: docker compose -p pulseforge-m19-test -f docker-compose.m19-test.yml up -d
+services:
+  redpanda-m19:
+    image: docker.redpanda.com/redpandadata/redpanda:v24.3.6
+    command:
+      - redpanda
+      - start
+      - --mode
+      - dev-container
+      - --smp
+      - "1"
+      - --memory
+      - 1G
+      - --reserve-memory
+      - 0M
+      - --overprovisioned
+      - --kafka-addr
+      - internal://0.0.0.0:9092,external://0.0.0.0:19093
+      - --advertise-kafka-addr
+      - internal://redpanda-m19:9092,external://127.0.0.1:19093
+    ports:
+      - "127.0.0.1:19093:19093"
+    # Intentionally no shared volumes, container_name, or host mounts.
