@@ -1,0 +1,12 @@
+name: pulseforge_warehouse
+version: '1.0.0'
+config-version: 2
+profile: pulseforge_warehouse
+model-paths: ["models"]
+seed-paths: ["seeds"]
+models:
+  pulseforge_warehouse:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: view
