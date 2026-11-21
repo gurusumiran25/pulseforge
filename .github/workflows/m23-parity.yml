@@ -1,0 +1,48 @@
+name: M23 dashboard dbt parity
+on:
+  push:
+    paths:
+      - 'apps/dashboard/**'
+      - 'warehouse/dbt/**'
+      - 'tests/dashboard/test_m23_dbt_parity.py'
+      - '.github/workflows/m23-parity.yml'
+  pull_request:
+    paths:
+      - 'apps/dashboard/**'
+      - 'warehouse/dbt/**'
+      - 'tests/dashboard/test_m23_dbt_parity.py'
+      - '.github/workflows/m23-parity.yml'
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -e '.[dev]' 'dbt-duckdb>=1.8,<2'
+      - name: Build disposable warehouse
+        working-directory: warehouse/dbt
+        run: |
+          dbt seed --profiles-dir .
+          dbt build --profiles-dir .
+        env:
+          DBT_PROFILES_DIR: .
+      - name: Build file-backed disposable warehouse for parity assertions
+        working-directory: warehouse/dbt
+        run: |
+          cat > /tmp/profiles.yml <<'EOF'
+          pulseforge_warehouse:
+            target: ci
+            outputs:
+              ci:
+                type: duckdb
+                path: /tmp/m23_parity.duckdb
+                threads: 1
+          EOF
+          dbt seed --profiles-dir /tmp
+          dbt build --profiles-dir /tmp
+      - name: Compare Streamlit metrics against dbt marts
+        env:
+          M23_DBT_PARITY_DB: /tmp/m23_parity.duckdb
+        run: python -m pytest -v tests/dashboard/test_m23_dbt_parity.py
