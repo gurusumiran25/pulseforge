@@ -9,7 +9,7 @@ models:
         data_tests:
           - not_null
           - accepted_values:
-              values: ['page_view', 'product_viewed', 'add_to_cart', 'checkout_started', 'payment_succeeded']
+              values: ['page_view', 'search_performed', 'product_viewed', 'add_to_cart', 'checkout_started', 'payment_succeeded', 'payment_failed', 'order_refunded']
   - name: fct_session_funnel
     description: "One row per session; stage flags do not enforce event ordering."
     columns:
