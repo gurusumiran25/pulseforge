@@ -41,4 +41,4 @@ def test_missing_configured_source_shows_user_facing_error(monkeypatch, tmp_path
     monkeypatch.setenv("PULSEFORGE_DASHBOARD_CSV", str(tmp_path / "missing.csv"))
     at = AppTest.from_file(str(APP), default_timeout=20).run()
     assert not at.exception, [str(item.message) for item in at.exception]
-    assert any("Unable to load event CSV" in item.message for item in at.error)
+    assert any("Unable to load event CSV" in str(item) for item in at.error)
