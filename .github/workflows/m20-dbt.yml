@@ -1,0 +1,22 @@
+name: M20 dbt warehouse
+on:
+  push:
+    paths:
+      - 'warehouse/dbt/**'
+      - '.github/workflows/m20-dbt.yml'
+  pull_request:
+    paths:
+      - 'warehouse/dbt/**'
+      - '.github/workflows/m20-dbt.yml'
+jobs:
+  dbt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install 'dbt-duckdb>=1.8,<2'
+      - name: Seed, build and test isolated synthetic warehouse
+        working-directory: warehouse/dbt
+        run: dbt seed --profiles-dir . && dbt build --profiles-dir .
