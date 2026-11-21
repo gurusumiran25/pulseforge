@@ -193,9 +193,9 @@ See [event catalogue](docs/event_catalogue.md) and `contracts/event_validation.p
 
 ## Testing and safety
 
-The published GitHub Actions run for commit `84f114aaea6079124e9a453a1ecfea42fca09295` succeeded. The standard CI workflow runs `python -m pytest` on Ubuntu / Python 3.12. Local G57 verification also passed 22 selected tests on Windows / Python 3.10.
+The standard CI workflow runs `python -m pytest` on Ubuntu / Python 3.12. Dedicated CI workflows separately test real Redpanda delivery (M26), generated-data dbt parity (M27), and dashboard metric parity (M28). These checks do not constitute production deployment or browser-level UI verification.
 
-Live Kafka demonstrations are separate and explicitly gated; CI success does **not** prove a live broker, production deployment, or all operational paths are error-free.
+A dedicated GitHub Actions workflow verifies a disposable live Redpanda broker (M26); standard CI alone does not. CI success does **not** prove production deployment or all operational paths are error-free.
 
 Recovery planning is preview-only by default. Production automatic self-healing is not enabled, and scheduler integration requires separate approval. Do not commit credentials, real customer data, operational databases, or sensitive reports.
 
@@ -209,11 +209,15 @@ Recovery planning is preview-only by default. Production automatic self-healing 
 - [x] Daily customer simulation and execution locks
 - [x] Data quality, monitoring, and preview-safe recovery foundations
 - [x] GitHub Actions pytest workflow
-- [ ] Repeatable isolated live-broker integration validation
-- [ ] Bronze/Silver/Gold warehouse and dbt models
-- [ ] Streamlit analytics dashboard
+- [x] Repeatable isolated real-broker integration validation (M26 GitHub Actions)
+- [x] Bronze/Silver/Gold warehouse and dbt models (M20/M27)
+- [x] Streamlit analytics dashboard and configurable CSV source (M21–M29)
 - [ ] Airflow orchestration
 - [ ] Continuous monitoring and production deployment hardening
+
+## Portfolio demonstration
+
+See [portfolio demo, milestone evidence, and interview talking points](docs/PORTFOLIO_DEMO.md). The real-broker and warehouse/dashboard parity checks are isolated CI integrations, **not** a continuously deployed production pipeline.
 
 ## Further documentation
 
