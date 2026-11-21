@@ -12,6 +12,7 @@ import pytest
 from confluent_kafka.admin import AdminClient, NewTopic
 from fastapi.testclient import TestClient
 
+from apps.dashboard.metrics import load_events, summarize
 from services.analytics.bronze_export import export_bronze
 from services.generator.journey_generator import generate_customer_journey
 from services.ingestion.main import app, get_event_producer
@@ -112,3 +113,16 @@ def test_real_broker_to_dbt_marts(tmp_path):
             "from agg_daily_funnel order by cohort_date_utc"
         ).fetchall()
     assert [list(row) for row in actual_daily] == expected_daily
+
+    # M34: calculate dashboard KPIs from the real-broker Bronze snapshot.
+    dashboard = summarize(load_events(project / "seeds/bronze_events.csv"))
+    assert dashboard["events"] == len(events)
+    assert dashboard["sessions"] == expected_sessions
+    assert dashboard["paid_sessions"] == expected_paid
+    dashboard_daily = [
+        [row["date"], row["sessions"], row["product_viewed"],
+         row["add_to_cart"], row["checkout_started"], row["payment_succeeded"]]
+        for row in dashboard["daily_funnel"]
+    ]
+    assert dashboard_daily == expected_daily
+    assert dashboard_daily == [list(row) for row in actual_daily]
