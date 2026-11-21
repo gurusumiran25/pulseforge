@@ -74,3 +74,24 @@ def summarize(events):
             for day in sorted(activity)
         ],
     }
+
+
+def filter_complete_sessions(events, start_date, end_date):
+    """Select complete sessions by their first event's UTC date, inclusively.
+
+    Unlike event-date filtering, this preserves all events in a chosen session,
+    including events crossing midnight.
+    """
+    if start_date > end_date:
+        raise ValueError("start_date must be on or before end_date")
+    first_seen = {}
+    for event in events:
+        session_id = event["session_id"]
+        event_date = event["event_time"].date().isoformat()
+        if session_id not in first_seen or event_date < first_seen[session_id]:
+            first_seen[session_id] = event_date
+    selected_sessions = {
+        session_id for session_id, date in first_seen.items()
+        if start_date <= date <= end_date
+    }
+    return [event for event in events if event["session_id"] in selected_sessions]

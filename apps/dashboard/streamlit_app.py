@@ -5,7 +5,7 @@ The initial release reads the synthetic M20 Bronze CSV only.
 """
 import streamlit as st
 
-from apps.dashboard.metrics import STAGES, load_events, summarize
+from apps.dashboard.metrics import STAGES, filter_complete_sessions, load_events, summarize
 
 
 st.set_page_config(page_title="PulseForge | Product Intelligence", page_icon="📊", layout="wide")
@@ -19,11 +19,15 @@ def get_events():
 events = get_events()
 dates = sorted({event["event_time"].date().isoformat() for event in events})
 if dates:
-    selected = st.sidebar.multiselect("UTC event dates", dates, default=dates)
-    events = [event for event in events if event["event_time"].date().isoformat() in selected]
+    start, end = st.sidebar.select_slider(
+        "Session-start cohort dates (UTC)",
+        options=dates,
+        value=(dates[0], dates[-1]),
+    )
+    events = filter_complete_sessions(events, start, end)
 
 summary = summarize(events)
-st.info("Session-stage participation is not an ordered conversion funnel. Filtering by event date can create partial sessions.")
+st.info("Session-stage participation is not an ordered conversion funnel. Date filtering selects complete sessions by first event UTC date.")
 c1, c2, c3, c4 = st.columns(4)
 c1.metric("Events", summary["events"])
 c2.metric("Sessions", summary["sessions"])
