@@ -28,7 +28,7 @@ jobs:
           python-version: '3.11'
       - run: python -m pip install -e '.[dev]' 'dbt-duckdb>=1.8,<2'
       - name: Generate disposable events and SQLite baseline
-        run: python -m tests.integration.m27_prepare_generated_seed /tmp/m27
+        run: python tests/integration/m27_prepare_generated_seed.py /tmp/m27
       - name: Build isolated dbt warehouse from generated events
         run: |
           cp -R warehouse/dbt /tmp/m27/dbt
