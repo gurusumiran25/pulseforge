@@ -5,6 +5,9 @@ Unlike the existing HTTP health smoke test, this executes the app's script.
 import csv
 from pathlib import Path
 
+import pytest
+
+pytest.importorskip("streamlit", reason="Streamlit widget tests run in the dedicated dashboard CI")
 from streamlit.testing.v1 import AppTest
 
 
