@@ -1,0 +1,50 @@
+name: M28 generated warehouse dashboard parity
+on:
+  push:
+    paths:
+      - 'apps/dashboard/**'
+      - 'tests/integration/test_m28_generated_dashboard_parity.py'
+      - '.github/workflows/m28-generated-dashboard.yml'
+      - 'tests/integration/m27_prepare_generated_seed.py'
+      - 'warehouse/dbt/**'
+      - 'warehouse/sql/**'
+  pull_request:
+    paths:
+      - 'apps/dashboard/**'
+      - 'tests/integration/test_m28_generated_dashboard_parity.py'
+      - '.github/workflows/m28-generated-dashboard.yml'
+      - 'tests/integration/m27_prepare_generated_seed.py'
+      - 'warehouse/dbt/**'
+      - 'warehouse/sql/**'
+jobs:
+  dashboard-parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -e '.[dev]' 'dbt-duckdb>=1.8,<2'
+      - name: Generate isolated event dataset
+        run: python tests/integration/m27_prepare_generated_seed.py /tmp/m28
+      - name: Build dbt models against generated events
+        run: |
+          cp -R warehouse/dbt /tmp/m28/dbt
+          cp /tmp/m28/bronze_events.csv /tmp/m28/dbt/seeds/bronze_events.csv
+          rm -rf /tmp/m28/dbt/tests
+          cat > /tmp/m28/dbt/profiles.yml <<'EOF'
+          pulseforge_warehouse:
+            target: ci
+            outputs:
+              ci:
+                type: duckdb
+                path: /tmp/m28/warehouse.duckdb
+                threads: 1
+          EOF
+          cd /tmp/m28/dbt
+          dbt seed --profiles-dir .
+          dbt build --profiles-dir .
+      - name: Compare dashboard KPIs against SQLite and dbt
+        env:
+          M28_OUTPUT_DIR: /tmp/m28
+        run: python -m pytest -v tests/integration/test_m28_generated_dashboard_parity.py
