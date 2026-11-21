@@ -21,27 +21,24 @@ on:
 jobs:
   real-broker:
     runs-on: ubuntu-latest
-    services:
-      redpanda:
-        image: redpandadata/redpanda:v24.3.9
-        ports:
-          - 19092:9092
-        options: >-
-          --health-cmd "bash -c 'echo > /dev/tcp/127.0.0.1/9092'"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 20
-        command: >-
-          redpanda start --overprovisioned --smp 1 --memory 1G
-          --reserve-memory 0M --node-id 0 --check=false
-          --kafka-addr 0.0.0.0:9092
-          --advertise-kafka-addr 127.0.0.1:19092
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python -m pip install -e '.[dev]'
+      - name: Start disposable Redpanda
+        run: |
+          docker run -d --name m26-redpanda -p 19092:9092 redpandadata/redpanda:v24.3.9 \
+            redpanda start --overprovisioned --smp 1 --memory 1G --reserve-memory 0M \
+            --node-id 0 --check=false --kafka-addr 0.0.0.0:9092 \
+            --advertise-kafka-addr 127.0.0.1:19092
+          for i in $(seq 1 40); do
+            if docker exec m26-redpanda rpk cluster info -X brokers=127.0.0.1:9092 >/dev/null 2>&1; then exit 0; fi
+            sleep 2
+          done
+          docker logs m26-redpanda
+          exit 1
       - name: Run actual Kafka network path through API and SQLite
         env:
           M26_KAFKA_BOOTSTRAP: 127.0.0.1:19092
