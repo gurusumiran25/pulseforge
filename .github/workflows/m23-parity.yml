@@ -24,14 +24,14 @@ jobs:
       - name: Build disposable warehouse
         working-directory: warehouse/dbt
         run: |
-          dbt seed --profiles-dir . --target ci --vars '{}' --profiles-dir . --target-path target
-          dbt build --profiles-dir . --target ci --target-path target
+          dbt seed --profiles-dir .
+          dbt build --profiles-dir .
         env:
           DBT_PROFILES_DIR: .
       - name: Build file-backed disposable warehouse for parity assertions
         working-directory: warehouse/dbt
         run: |
-          cat > /tmp/m23_profiles.yml <<'EOF'
+          cat > /tmp/profiles.yml <<'EOF'
           pulseforge_warehouse:
             target: ci
             outputs:
