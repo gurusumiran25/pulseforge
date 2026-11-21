@@ -1,0 +1,51 @@
+name: M27 generated events dbt parity
+on:
+  push:
+    paths:
+      - 'tests/integration/m27_prepare_generated_seed.py'
+      - 'tests/integration/test_m27_generated_dbt_parity.py'
+      - '.github/workflows/m27-generated-dbt.yml'
+      - 'warehouse/dbt/**'
+      - 'warehouse/sql/**'
+      - 'services/generator/**'
+      - 'services/storage/**'
+  pull_request:
+    paths:
+      - 'tests/integration/m27_prepare_generated_seed.py'
+      - 'tests/integration/test_m27_generated_dbt_parity.py'
+      - '.github/workflows/m27-generated-dbt.yml'
+      - 'warehouse/dbt/**'
+      - 'warehouse/sql/**'
+      - 'services/generator/**'
+      - 'services/storage/**'
+jobs:
+  generated-dbt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -e '.[dev]' 'dbt-duckdb>=1.8,<2'
+      - name: Generate disposable events and SQLite baseline
+        run: python -m tests.integration.m27_prepare_generated_seed /tmp/m27
+      - name: Build isolated dbt warehouse from generated events
+        run: |
+          cp -R warehouse/dbt /tmp/m27/dbt
+          cp /tmp/m27/bronze_events.csv /tmp/m27/dbt/seeds/bronze_events.csv
+          cat > /tmp/m27/dbt/profiles.yml <<'EOF'
+          pulseforge_warehouse:
+            target: ci
+            outputs:
+              ci:
+                type: duckdb
+                path: /tmp/m27/warehouse.duckdb
+                threads: 1
+          EOF
+          cd /tmp/m27/dbt
+          dbt seed --profiles-dir .
+          dbt build --profiles-dir .
+      - name: Verify actual generated data parity
+        env:
+          M27_OUTPUT_DIR: /tmp/m27
+        run: python -m pytest -v tests/integration/test_m27_generated_dbt_parity.py
