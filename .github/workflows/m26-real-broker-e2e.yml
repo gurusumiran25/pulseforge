@@ -1,0 +1,48 @@
+name: M26 real broker end-to-end
+on:
+  push:
+    paths:
+      - 'tests/integration/test_m26_real_broker_e2e.py'
+      - '.github/workflows/m26-real-broker-e2e.yml'
+      - 'services/ingestion/**'
+      - 'services/streaming/**'
+      - 'services/storage/**'
+      - 'services/generator/**'
+      - 'warehouse/sql/**'
+  pull_request:
+    paths:
+      - 'tests/integration/test_m26_real_broker_e2e.py'
+      - '.github/workflows/m26-real-broker-e2e.yml'
+      - 'services/ingestion/**'
+      - 'services/streaming/**'
+      - 'services/storage/**'
+      - 'services/generator/**'
+      - 'warehouse/sql/**'
+jobs:
+  real-broker:
+    runs-on: ubuntu-latest
+    services:
+      redpanda:
+        image: redpandadata/redpanda:v24.3.9
+        ports:
+          - 19092:9092
+        options: >-
+          --health-cmd "bash -c 'echo > /dev/tcp/127.0.0.1/9092'"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+        command: >-
+          redpanda start --overprovisioned --smp 1 --memory 1G
+          --reserve-memory 0M --node-id 0 --check=false
+          --kafka-addr 0.0.0.0:9092
+          --advertise-kafka-addr 127.0.0.1:19092
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e '.[dev]'
+      - name: Run actual Kafka network path through API and SQLite
+        env:
+          M26_KAFKA_BOOTSTRAP: 127.0.0.1:19092
+        run: python -m pytest -v tests/integration/test_m26_real_broker_e2e.py
