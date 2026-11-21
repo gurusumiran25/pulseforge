@@ -3,20 +3,29 @@
 Run with: streamlit run apps/dashboard/streamlit_app.py
 The initial release reads the synthetic M20 Bronze CSV only.
 """
+import os
+from pathlib import Path
+
 import streamlit as st
 
-from apps.dashboard.metrics import STAGES, filter_complete_sessions, load_events, summarize
+from apps.dashboard.metrics import SEED_PATH, STAGES, filter_complete_sessions, load_events, summarize
 
 
 st.set_page_config(page_title="PulseForge | Product Intelligence", page_icon="📊", layout="wide")
 st.title("PulseForge")
-st.caption("Product intelligence • M21 demo • synthetic events, not production data")
+st.caption("Product intelligence • synthetic events, not production data")
+source_path = Path(os.environ.get("PULSEFORGE_DASHBOARD_CSV", str(SEED_PATH))).expanduser()
+st.caption(f"Configured CSV source: {source_path.name}")
 
 @st.cache_data
-def get_events():
-    return load_events()
+def get_events(csv_path):
+    return load_events(csv_path)
 
-events = get_events()
+try:
+    events = get_events(str(source_path))
+except (OSError, ValueError) as exc:
+    st.error(f"Unable to load event CSV: {exc}")
+    st.stop()
 dates = sorted({event["event_time"].date().isoformat() for event in events})
 if dates:
     start, end = st.sidebar.select_slider(
@@ -48,4 +57,4 @@ st.line_chart(summary["daily_activity"], x="date", y=["events", "active_users"])
 with st.expander("Inspect sessions"):
     st.dataframe(summary["session_rows"], use_container_width=True, hide_index=True)
 
-st.caption("Source: warehouse/dbt/seeds/bronze_events.csv • Demo dataset • M20 definitions")
+st.caption("Source: configured Bronze-format CSV • Synthetic data only • M20 definitions")
