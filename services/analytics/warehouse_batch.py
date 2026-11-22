@@ -9,6 +9,7 @@ from pathlib import Path
 
 from services.analytics.bronze_export import export_bronze
 from services.analytics.bronze_manifest import write_manifest, verify_manifest
+from services.analytics.warehouse_quality import check_quality
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -52,7 +53,10 @@ def run_warehouse_batch(db_path, workspace, *, dbt_executable="dbt"):
         check=True,
         timeout=180,
     )
-    return {"events_exported": exported, "warehouse": str(warehouse), "manifest": str(manifest_path)}
+    quality = check_quality(warehouse)
+    if not quality["healthy"]:
+        raise ValueError("Warehouse data quality gate failed: " + "; ".join(quality["issues"]))
+    return {"events_exported": exported, "warehouse": str(warehouse), "manifest": str(manifest_path), "quality": quality}
 
 
 def main():
