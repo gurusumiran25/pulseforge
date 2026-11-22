@@ -18,7 +18,7 @@ A green standard pytest workflow alone does **not** establish release readiness.
 
 ## Release evidence and CI
 
-The [M52 acceptance workflow](../.github/workflows/m52-release-acceptance.yml) runs a clean Python 3.12 install, dependency check, full pytest suite, real dbt build, synthetic one-command demo, deliberate semantic corruption regression, and 1,000-session integrity/performance smoke. The separate [Redpanda integration workflow](../.github/workflows/m19-redpanda-integration.yml) is required to verify broker delivery; its exact path and green status must be checked on the final release candidate.
+The [M52 acceptance workflow](../.github/workflows/m52-release-acceptance.yml) runs a clean Python 3.12 install, dependency check, full pytest suite, real dbt build, synthetic one-command demo, deliberate semantic corruption regression, and 1,000-session integrity/performance smoke. The separate Redpanda integration workflow is required to verify broker delivery; its exact path and green status must be checked on the final release candidate.
 
 M49 fixes deterministic retry classification; M50 adds bounded synthetic scale; M51 adds an opt-in append-only incremental publisher that exposes CSV and manifest together via directory rename. M51 is **not** integrated into the default dbt one-shot batch and is not a multi-writer distributed transaction.
 
