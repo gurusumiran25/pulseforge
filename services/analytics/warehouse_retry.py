@@ -14,7 +14,7 @@ from services.analytics.warehouse_run_report import run_reported_batch
 
 def is_retryable(error):
     """Retry only transient dbt subprocess failures (not integrity or input errors)."""
-    return isinstance(error, (subprocess.TimeoutExpired, subprocess.CalledProcessError))
+    # A dbt nonzero exit is not evidence of a transient failure: it can mean\n    # invalid SQL, broken models, failing dbt tests, or malformed input.\n    # Retrying such deterministic failures only repeats work.\n    return isinstance(error, subprocess.TimeoutExpired)
 
 
 def run_with_retries(db_path, output_root, *, max_attempts=3, delay_seconds=0, dbt_executable="dbt"):
