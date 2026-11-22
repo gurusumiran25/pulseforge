@@ -8,6 +8,7 @@ import subprocess
 from pathlib import Path
 
 from services.analytics.bronze_export import export_bronze
+from services.analytics.bronze_manifest import write_manifest, verify_manifest
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -32,6 +33,11 @@ def run_warehouse_batch(db_path, workspace, *, dbt_executable="dbt"):
     if tests.exists():
         shutil.rmtree(tests)
     exported = export_bronze(source, project / "seeds/bronze_events.csv")
+    bronze = project / "seeds/bronze_events.csv"
+    manifest_path = workspace / "bronze.manifest.json"
+    manifest = write_manifest(bronze, manifest_path)
+    assert manifest["rows"] == exported
+    verify_manifest(bronze, manifest_path)
     warehouse = workspace / "warehouse.duckdb"
     (project / "profiles.yml").write_text(
         "pulseforge_warehouse:\n  target: ci\n  outputs:\n    ci:\n"
@@ -39,13 +45,14 @@ def run_warehouse_batch(db_path, workspace, *, dbt_executable="dbt"):
         "      threads: 1\n",
         encoding="utf-8",
     )
+    verify_manifest(bronze, manifest_path)
     subprocess.run(
         [dbt_executable, "build", "--profiles-dir", "."],
         cwd=project,
         check=True,
         timeout=180,
     )
-    return {"events_exported": exported, "warehouse": str(warehouse)}
+    return {"events_exported": exported, "warehouse": str(warehouse), "manifest": str(manifest_path)}
 
 
 def main():
