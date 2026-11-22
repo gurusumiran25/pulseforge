@@ -1,0 +1,44 @@
+name: M52 portfolio release acceptance
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/m52-release-acceptance.yml'
+      - 'services/**'
+      - 'apps/**'
+      - 'warehouse/**'
+      - 'tests/**'
+      - 'pyproject.toml'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/m52-release-acceptance.yml'
+      - 'services/**'
+      - 'apps/**'
+      - 'warehouse/**'
+      - 'tests/**'
+      - 'pyproject.toml'
+  workflow_dispatch:
+
+jobs:
+  portfolio-acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install full declared portfolio dependencies
+        run: |
+          python -m pip install -e '.[dev,portfolio]'
+          python -m pip check
+      - name: Standard suite plus real demo, semantic corruption, and synthetic scale
+        env:
+          PULSEFORGE_RUN_M43_DBT: '1'
+          PULSEFORGE_RUN_M45_DEMO: '1'
+          PULSEFORGE_RUN_M46_HEALTH: '1'
+          PULSEFORGE_RUN_M50_PERF: '1'
+        run: python -m pytest -q
+      - name: Verify Ruff source checks
+        run: python -m ruff check services/analytics/warehouse_retry.py services/analytics/immutable_bronze_chunks.py tests/analytics/test_m49_retry_classification.py tests/analytics/test_m51_immutable_bronze.py

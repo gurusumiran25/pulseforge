@@ -4,8 +4,8 @@ import json
 
 import pytest
 
-from services.analytics.immutable_bronze_chunks import publish_chunk
 from services.analytics.bronze_manifest import verify_manifest
+from services.analytics.immutable_bronze_chunks import publish_chunk
 from services.generator.journey_generator import generate_customer_journey
 from services.storage.sqlite_store import SQLiteEventStore
 
