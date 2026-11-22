@@ -1,0 +1,32 @@
+name: M50 synthetic performance smoke
+
+on:
+  push:
+    paths:
+      - 'services/generator/**'
+      - 'services/storage/**'
+      - 'services/analytics/bronze_*'
+      - 'tests/performance/test_m50_synthetic_scale.py'
+      - '.github/workflows/m50-performance-smoke.yml'
+  pull_request:
+    paths:
+      - 'services/generator/**'
+      - 'services/storage/**'
+      - 'services/analytics/bronze_*'
+      - 'tests/performance/test_m50_synthetic_scale.py'
+      - '.github/workflows/m50-performance-smoke.yml'
+
+jobs:
+  synthetic-performance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e '.[dev]'
+      - name: Generate 1000 sessions and verify Bronze snapshot
+        env:
+          PULSEFORGE_RUN_M50_PERF: '1'
+        run: python -m pytest -q tests/performance/test_m50_synthetic_scale.py
