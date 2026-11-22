@@ -14,7 +14,8 @@ def test_builds_isolated_snapshot_and_invokes_dbt(tmp_path):
     events = generate_customer_journey(seed=42)
     source.insert_events_bulk(events)
     workspace = tmp_path / "build"
-    with patch("services.analytics.warehouse_batch.subprocess.run") as command:
+    with patch("services.analytics.warehouse_batch.check_quality", return_value={"healthy": True, "issues": [], "checks": 8}), \
+         patch("services.analytics.warehouse_batch.subprocess.run") as command:
         result = run_warehouse_batch(source.db_path, workspace)
     assert result["events_exported"] == len(events)
     assert result["warehouse"] == str(workspace / "warehouse.duckdb")

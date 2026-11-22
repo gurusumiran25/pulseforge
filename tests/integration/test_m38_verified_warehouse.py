@@ -13,7 +13,8 @@ def test_batch_writes_verified_manifest(tmp_path):
     store = SQLiteEventStore(tmp_path / "events.db")
     events = generate_customer_journey(seed=42)
     store.insert_events_bulk(events)
-    with patch("services.analytics.warehouse_batch.subprocess.run") as runner:
+    with patch("services.analytics.warehouse_batch.check_quality", return_value={"healthy": True, "issues": [], "checks": 8}), \
+         patch("services.analytics.warehouse_batch.subprocess.run") as runner:
         result = run_warehouse_batch(store.db_path, tmp_path / "output")
     assert result["events_exported"] == len(events)
     assert verify_manifest(
