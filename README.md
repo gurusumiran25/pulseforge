@@ -106,14 +106,18 @@ services/ingestion/       FastAPI ingestion
 services/streaming/       Kafka-compatible producer and consumer
 services/storage/         SQLite event persistence
 services/simulation/      Daily customer simulation and recovery helpers
-services/analytics/       Funnel and revenue metrics
+services/analytics/       Funnel, revenue, Bronze export, batch orchestration and quality gates
 services/quality/         Data quality reports and checks
 services/monitoring/      Metrics, snapshots, alerts, monitoring and recovery
-apps/                    Application package placeholder
+apps/dashboard/          Streamlit product analytics dashboard
 services/monitoring/README.md  Monitoring reference
 contracts/events/         Event envelope schema
 .github/workflows/        Automated tests
 ```
+
+## Reproducible portfolio environment
+
+Install the complete portfolio dependency set with `python -m pip install -e ".[dev,portfolio]"`. This includes Streamlit and dbt DuckDB, which are intentionally optional in the core package. The [M44 clean-install workflow](.github/workflows/m44-release-smoke.yml) verifies dependency resolution, dashboard rendering, and the real quality-gated warehouse batch. See [release acceptance checklist](docs/RELEASE_CHECKLIST.md). These are isolated validations, not a deployed service.
 
 ## Local setup (fresh, isolated clone)
 
@@ -214,6 +218,10 @@ Recovery planning is preview-only by default. Production automatic self-healing 
 - [x] Streamlit analytics dashboard and configurable CSV source (M21–M29)
 - [ ] Airflow orchestration
 - [ ] Continuous monitoring and production deployment hardening
+
+## Warehouse and dashboard
+
+The repository includes dbt DuckDB Bronze/Silver/Gold transformations, a one-shot SQLite-to-Bronze batch builder with integrity manifests, a semantic quality gate, and a Streamlit dashboard. The dashboard reads Bronze-format CSV, not DuckDB directly. See [M43 quality-gate documentation](docs/M43_ENFORCED_WAREHOUSE_QUALITY.md) and [M44 setup](docs/M44_REPRODUCIBLE_SETUP.md).
 
 ## Portfolio demonstration
 
