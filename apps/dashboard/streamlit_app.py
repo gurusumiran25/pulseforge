@@ -9,23 +9,34 @@ from pathlib import Path
 import streamlit as st
 
 from apps.dashboard.metrics import SEED_PATH, STAGES, filter_complete_sessions, load_events, summarize
+from apps.dashboard.public_feed import load_verified_public_feed
 
 
 st.set_page_config(page_title="PulseForge | Product Intelligence", page_icon="📊", layout="wide")
 st.title("PulseForge")
 st.caption("Product intelligence • synthetic events, not production data")
+remote_enabled = os.environ.get("PULSEFORGE_PUBLIC_FEED", "0") == "1"
 source_path = Path(os.environ.get("PULSEFORGE_DASHBOARD_CSV", str(SEED_PATH))).expanduser()
-st.caption(f"Configured CSV source: {source_path.name}")
 
-@st.cache_data
-def get_events(csv_path):
-    return load_events(csv_path)
+@st.cache_data(ttl=3600, show_spinner=False)
+def get_events(csv_path, remote):
+    if remote:
+        return load_verified_public_feed()
+    return load_events(csv_path), None
 
 try:
-    events = get_events(str(source_path))
-except (OSError, ValueError) as exc:
-    st.error(f"Unable to load event CSV: {exc}")
+    events, feed_manifest = get_events(str(source_path), remote_enabled)
+except Exception as exc:
+    # Do not silently fall back to stale seed data when the live feed fails.
+    st.error(f"Dashboard feed unavailable: {type(exc).__name__}. Try refreshing later.")
     st.stop()
+
+if remote_enabled:
+    st.caption("Source: public GitHub synthetic feed • hourly cache refresh • SHA-256 verified")
+    st.caption("Data refreshes when the scheduled publisher succeeds; GitHub Actions timing is not guaranteed.")
+else:
+    st.caption(f"Local CSV source: {source_path.name} • enable PULSEFORGE_PUBLIC_FEED=1 in Streamlit Cloud to use daily data")
+
 dates = sorted({event["event_time"].date().isoformat() for event in events})
 if dates:
     start, end = st.sidebar.select_slider(
