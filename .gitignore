@@ -13,3 +13,18 @@ __pycache__/
 /data/generated/
 
 /data/storage/
+
+# Local warehouse, dbt, and portfolio demonstration outputs
+*.duckdb
+*.duckdb.wal
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.db-wal
+*.db-shm
+/warehouse/dbt/target/
+/warehouse/dbt/logs/
+/warehouse/dbt/dbt_packages/
+/warehouse/dbt/profiles.yml
+/pulseforge-demo/
+/demo-output/
