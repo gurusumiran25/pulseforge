@@ -35,6 +35,11 @@ The two paths are **separately validated integrations**, not one deployed contin
 | M27 | Generated events → SQLite views → CSV → dbt DuckDB parity | Continuous Kafka-to-dbt |
 | M28 | Generated dataset → SQLite/dbt → dashboard metrics parity | Streamlit rendering |
 | M29 | Configurable CSV source for Streamlit | Direct warehouse query |
+| M30–M34 | Portfolio documentation, Streamlit AppTest, atomic Bronze export, real broker-to-dbt and dashboard parity | Always-on operation |
+| M35–M40 | Explicit warehouse batch, snapshot refresh, SHA-256 manifest, manifest gate, structured run reports, bounded retries | Distributed scheduler and recovery |
+| M41–M43 | Offline health checks, eight semantic checks and enforced real dbt quality gate | Continuous production monitoring |
+| M44 | Clean-install dependency extras and dashboard/warehouse smoke CI | Fully pinned dependency lock |
+| M45 | One-command real synthetic SQLite → Bronze → dbt → quality → health → dashboard metric parity | Live broker in same command |
 
 ## Demo narrative for interviews
 
@@ -54,9 +59,13 @@ The two paths are **separately validated integrations**, not one deployed contin
 
 These are **project implementation claims**, not claims of production scale, external users, or deployed revenue impact.
 
+## One-command demo (synthetic data)
+
+Install `.[dev,portfolio]` and run `python -m services.analytics.portfolio_demo --output-root /tmp/pulseforge-demo --sessions 20` using an empty output directory. This generates a SQLite event store, Bronze snapshot and manifest, real dbt DuckDB marts, run report, health validation and JSON summary. The demo verifies event/session/payment counts against the dashboard metric implementation. See [M45 instructions](M45_PORTFOLIO_DEMO.md) and [release checklist](RELEASE_CHECKLIST.md). Real Redpanda ingestion remains an independent dedicated integration workflow.
+
 ## Known gaps / next milestones
 
-- Browser-level Streamlit rendering and visual UX verification.
+- Streamlit AppTest rendering is covered by dedicated CI; deployed browser-level visual UX remains unverified.
 - Direct Kafka-to-warehouse streaming ingestion and orchestration.
 - Recovery after consumer rebalance and sustained load tests.
 - Production secrets, observability, hosting, and scaling.

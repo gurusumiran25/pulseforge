@@ -6,7 +6,7 @@
 
 PulseForge is an actively developed Python portfolio project exploring synthetic e-commerce event generation, validated ingestion, Kafka-compatible streaming, SQLite persistence, product analytics, data quality, monitoring, and controlled recovery.
 
-**Status:** The repository contains implemented and tested modules, but it is **not a production-deployed analytics platform**. Live broker integration, continuously deployed monitoring, and automatic production self-healing are not covered by the standard CI workflow.
+**Status:** The repository includes a reproducible synthetic end-to-end portfolio demonstration and isolated broker-backed CI, but it is **not a production-deployed analytics platform**. Live broker integration, continuously deployed monitoring, and automatic production self-healing are not covered by the standard CI workflow.
 
 ## Engineering goals
 
@@ -197,7 +197,7 @@ See [event catalogue](docs/event_catalogue.md) and `contracts/event_validation.p
 
 ## Testing and safety
 
-The standard CI workflow runs `python -m pytest` on Ubuntu / Python 3.12. Dedicated CI workflows separately test real Redpanda delivery (M26), generated-data dbt parity (M27), and dashboard metric parity (M28). These checks do not constitute production deployment or browser-level UI verification.
+The standard CI workflow runs `python -m pytest` on Ubuntu / Python 3.12. Dedicated CI workflows separately test real Redpanda delivery (M26/M33), dbt quality gates (M43), clean-install dashboard and warehouse smoke tests (M44), and the real synthetic portfolio demo (M45). These checks do not constitute production deployment or browser-level UI verification.
 
 A dedicated GitHub Actions workflow verifies a disposable live Redpanda broker (M26); standard CI alone does not. CI success does **not** prove production deployment or all operational paths are error-free.
 
@@ -225,7 +225,7 @@ The repository includes dbt DuckDB Bronze/Silver/Gold transformations, a one-sho
 
 ## Portfolio demonstration
 
-See [portfolio demo, milestone evidence, and interview talking points](docs/PORTFOLIO_DEMO.md). The real-broker and warehouse/dashboard parity checks are isolated CI integrations, **not** a continuously deployed production pipeline.
+**One-command synthetic demo:** after installing `.[dev,portfolio]`, run `python -m services.analytics.portfolio_demo --output-root /tmp/pulseforge-demo --sessions 20` with a new empty output directory. This executes real SQLite → verified Bronze → dbt DuckDB → semantic quality → offline health and dashboard metric parity, writing a JSON summary. It does **not** start a broker or web server. See [M45 instructions](docs/M45_PORTFOLIO_DEMO.md), [portfolio evidence and interview talking points](docs/PORTFOLIO_DEMO.md) and [release checklist](docs/RELEASE_CHECKLIST.md). The real-broker and warehouse/dashboard parity checks are isolated CI integrations, **not** a continuously deployed production pipeline.
 
 ## Further documentation
 
@@ -235,4 +235,4 @@ See [portfolio demo, milestone evidence, and interview talking points](docs/PORT
 - [M18 safety and self-healing checkpoint](docs/M18_AUTOMATED_MONITORING.md)
 - [Local-first decision](docs/decisions/0001-local-first.md)
 
-**Project status:** Active engineering portfolio development; synthetic data only.
+**Project status:** Portfolio release hardening; synthetic data only. Final release acceptance and tagging remain pending.
