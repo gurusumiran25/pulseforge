@@ -25,7 +25,7 @@ def build_public_feed(output_dir, *, as_of=None, days=14, sessions_per_day=40):
         raise ValueError("days must be 1..31 and sessions_per_day 1..200")
     day = as_of or datetime.now(timezone.utc).date()
     if not isinstance(day, date):
-        raise ValueError("as_of must be a date")
+        raise TypeError("as_of must be a date")
     target = Path(output_dir).resolve()
     target.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="pulseforge-daily-") as temp:
