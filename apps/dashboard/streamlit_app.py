@@ -1,7 +1,7 @@
 """PulseForge M21 — product analytics portfolio dashboard.
 
 Run with: streamlit run apps/dashboard/streamlit_app.py
-The initial release reads the synthetic M20 Bronze CSV only.
+Reads a configurable Bronze-format CSV; not a direct DuckDB connection.
 """
 import os
 from pathlib import Path
@@ -57,4 +57,4 @@ st.line_chart(summary["daily_activity"], x="date", y=["events", "active_users"])
 with st.expander("Inspect sessions"):
     st.dataframe(summary["session_rows"], use_container_width=True, hide_index=True)
 
-st.caption("Source: configured Bronze-format CSV • Synthetic data only • M20 definitions")
+st.caption("Source: configured Bronze-format CSV • Synthetic data only • UTC session-start cohort definitions")
