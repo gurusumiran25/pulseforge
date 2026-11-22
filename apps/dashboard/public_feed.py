@@ -1,6 +1,5 @@
 """Read the public GitHub-hosted feed with a verified integrity manifest."""
 import hashlib
-import io
 import json
 import tempfile
 from pathlib import Path
