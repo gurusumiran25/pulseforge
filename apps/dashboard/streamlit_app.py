@@ -8,7 +8,11 @@ from pathlib import Path
 from datetime import datetime, timezone
 
 import streamlit as st
-from streamlit_autorefresh import st_autorefresh
+try:
+    from streamlit_autorefresh import st_autorefresh
+except ImportError:
+    # Minimal dev-only CI installs Streamlit without the optional dashboard extra.
+    st_autorefresh = None
 
 from apps.dashboard.metrics import SEED_PATH, STAGES, filter_complete_sessions, load_events, summarize
 from apps.dashboard.public_feed import load_verified_public_feed
@@ -16,7 +20,8 @@ from apps.dashboard.public_feed import load_verified_public_feed
 
 st.set_page_config(page_title="PulseForge | Product Intelligence", page_icon="📊", layout="wide")
 st.title("PulseForge")
-st_autorefresh(interval=3_600_000, key="pulseforge-hourly-feed-refresh")
+if st_autorefresh is not None:
+    st_autorefresh(interval=3_600_000, key="pulseforge-hourly-feed-refresh")
 st.caption("Product intelligence • synthetic events, not production data")
 remote_enabled = os.environ.get("PULSEFORGE_PUBLIC_FEED", "0") == "1"
 source_path = Path(os.environ.get("PULSEFORGE_DASHBOARD_CSV", str(SEED_PATH))).expanduser()
@@ -31,7 +36,10 @@ try:
     events, feed_manifest = get_events(str(source_path), remote_enabled)
 except Exception as exc:
     # Do not silently fall back to stale seed data when the live feed fails.
-    st.error(f"Dashboard feed unavailable: {type(exc).__name__}. Try refreshing later.")
+    if remote_enabled:
+        st.error(f"Dashboard feed unavailable: {type(exc).__name__}. Try refreshing later.")
+    else:
+        st.error(f"Unable to load event CSV: {exc}")
     st.stop()
 
 if remote_enabled:
