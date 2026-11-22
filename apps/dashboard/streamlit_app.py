@@ -5,6 +5,7 @@ Reads a configurable Bronze-format CSV; not a direct DuckDB connection.
 """
 import os
 from pathlib import Path
+from datetime import datetime, timezone
 
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
@@ -35,6 +36,11 @@ except Exception as exc:
 
 if remote_enabled:
     st.caption("Source: public GitHub synthetic feed • hourly cache refresh • SHA-256 verified")
+    generated_at = datetime.fromisoformat(feed_manifest["generated_at_utc"])
+    age_hours = (datetime.now(timezone.utc) - generated_at.astimezone(timezone.utc)).total_seconds() / 3600
+    st.caption(f"Last successful feed publication: {generated_at:%Y-%m-%d %H:%M} UTC")
+    if age_hours > 36:
+        st.warning(f"Data refresh overdue: last verified publication {age_hours:.0f} hours ago. Check GitHub Actions.")
     st.caption("Data refreshes when the scheduled publisher succeeds; GitHub Actions timing is not guaranteed.")
 else:
     st.caption(f"Local CSV source: {source_path.name} • enable PULSEFORGE_PUBLIC_FEED=1 in Streamlit Cloud to use daily data")
