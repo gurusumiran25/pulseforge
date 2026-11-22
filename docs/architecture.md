@@ -81,8 +81,26 @@ The repository has multiple local SQLite contexts. In particular, the daily CLI 
 
 `.github/workflows/tests.yml` installs development dependencies and runs pytest on Ubuntu / Python 3.12. The workflow validates its test suite, not a running Redpanda cluster, Windows Task Scheduler, or a continuously deployed monitoring service.
 
-## 6. Planned architecture (not implemented)
+## 6. Implemented warehouse and dashboard (M20–M43)
 
-The long-term design may include Bronze/Silver/Gold warehouse layers, dbt models, a Streamlit dashboard, Airflow orchestration, continuous observability, and deployment hardening. These are roadmap items, not current runtime claims.
+```text
+SQLite event store
+       |
+       v
+Atomic Bronze CSV export + SHA-256 manifest
+       |
+       v
+Explicit one-shot dbt DuckDB build
+       |
+       v
+Staging, session and daily marts
+       |
+       v
+Eight semantic quality checks -> success or failure report
+```
 
-For monitoring-specific safety details, see [M18 automated monitoring](M18_AUTOMATED_MONITORING.md) and [monitoring reference](../services/monitoring/README.md).
+The one-shot batch is invoked explicitly, not scheduled. The quality gate blocks a successful batch result if any check fails. Run reports and bounded retries preserve separate attempt workspaces. A separate Streamlit application reads a Bronze-format CSV and computes session-cohort metrics. CI validates cross-engine parity, real broker integration and AppTest rendering in dedicated workflows.
+
+**Not implemented as a continuously deployed service:** Airflow orchestration, direct Kafka-to-warehouse continuous ingestion, distributed warehouse infrastructure, cloud monitoring SLAs and automated production recovery.
+
+See [M43 enforced quality](M43_ENFORCED_WAREHOUSE_QUALITY.md), [M44 clean install](M44_REPRODUCIBLE_SETUP.md) and [release acceptance checklist](RELEASE_CHECKLIST.md).
