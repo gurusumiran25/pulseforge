@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 from services.analytics.bronze_manifest import verify_manifest
+from services.analytics.warehouse_quality import check_quality
 
 
 REQUIRED_MARTS = ("stg_events", "fct_session_funnel", "agg_daily_funnel")
@@ -54,6 +55,13 @@ def check_warehouse(report_path):
                     connection.close()
             except Exception as exc:
                 issues.append(f"DuckDB inspection failed: {type(exc).__name__}")
+    if warehouse.is_file():
+        try:
+            quality = check_quality(warehouse)
+            if not quality["healthy"]:
+                issues.extend(f"Semantic quality: {issue}" for issue in quality["issues"])
+        except (OSError, ImportError, ValueError, RuntimeError) as exc:
+            issues.append(f"Semantic quality inspection failed: {type(exc).__name__}")
     return {"healthy": not issues, "issues": issues}
 
 

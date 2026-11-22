@@ -1,0 +1,30 @@
+name: M46 semantic warehouse health regression
+
+on:
+  push:
+    paths:
+      - 'services/analytics/**'
+      - 'tests/integration/test_m46_semantic_health.py'
+      - 'warehouse/dbt/**'
+      - '.github/workflows/m46-semantic-health.yml'
+  pull_request:
+    paths:
+      - 'services/analytics/**'
+      - 'tests/integration/test_m46_semantic_health.py'
+      - 'warehouse/dbt/**'
+      - '.github/workflows/m46-semantic-health.yml'
+
+jobs:
+  semantic-health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e '.[dev,portfolio]'
+      - name: Verify health fails closed after mart corruption
+        env:
+          PULSEFORGE_RUN_M46_HEALTH: '1'
+        run: python -m pytest -q tests/integration/test_m46_semantic_health.py
