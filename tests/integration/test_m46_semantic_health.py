@@ -20,7 +20,7 @@ def test_health_detects_corrupted_daily_mart(tmp_path):
     assert check_warehouse(report)["healthy"]
     con = duckdb.connect(result["warehouse"])
     try:
-        con.execute("UPDATE agg_daily_funnel SET sessions = sessions + 1")
+        # dbt materializes the mart as a view; replace it with a deliberately\n        # corrupted base table so the semantic health gate sees invalid data.\n        con.execute("CREATE TABLE corrupt_daily AS SELECT * FROM agg_daily_funnel")\n        con.execute("DROP VIEW agg_daily_funnel")\n        con.execute("ALTER TABLE corrupt_daily RENAME TO agg_daily_funnel")\n        con.execute("UPDATE agg_daily_funnel SET sessions = sessions + 1")
     finally:
         con.close()
     unhealthy = check_warehouse(report)
