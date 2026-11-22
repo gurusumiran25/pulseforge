@@ -8,10 +8,10 @@ from services.analytics.warehouse_retry import run_with_retries
 from services.storage.sqlite_store import SQLiteEventStore
 
 
-def test_retry_transient_dbt_failure_then_succeed(tmp_path):
+def test_retry_timeout_then_succeed(tmp_path):
     store = SQLiteEventStore(tmp_path / "events.db")
     root = tmp_path / "attempts"
-    failure = subprocess.CalledProcessError(1, ["dbt", "build"])
+    failure = subprocess.TimeoutExpired(["dbt", "build"], timeout=1)
     with patch("services.analytics.warehouse_retry.run_reported_batch",
                side_effect=[failure, {"status": "success", "run_id": "test"}]) as run:
         result = run_with_retries(store.db_path, root, max_attempts=3)
