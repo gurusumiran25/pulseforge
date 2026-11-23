@@ -31,6 +31,8 @@ jobs:
           python -m pip check
       - name: Build rolling 14-day synthetic data and validate warehouse
         run: python -m services.analytics.daily_public_feed --output-dir data/public --days 14 --sessions-per-day 40
+      - name: Require verified Bronze and payment sidecar before publishing
+        run: python -m services.analytics.public_feed_health --directory data/public --max-age-hours 2 --require-payment-sidecar
       - name: Publish validated CSV, manifest, and status together
         run: |
           git config user.name "github-actions[bot]"
