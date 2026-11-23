@@ -16,7 +16,7 @@ def verify_published_feed(directory, *, now=None, max_age_hours=36):
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     raw = manifest.get("generated_at_utc")
     if not isinstance(raw, str):
-        raise ValueError("Missing publication timestamp")
+        raise TypeError("Missing publication timestamp")
     try:
         published = datetime.fromisoformat(raw.replace("Z", "+00:00"))
     except ValueError as exc:
