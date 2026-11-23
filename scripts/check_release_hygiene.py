@@ -19,7 +19,12 @@ BLOCKED_SUFFIXES = (
 BLOCKED_DIRECTORIES = {
     ".venv", "__pycache__", ".pytest_cache", ".ruff_cache",
 }
-ALLOWED_PUBLIC_PREFIX = "data/public/"
+ALLOWED_PUBLIC_FILES = {
+    "data/public/latest_bronze.csv",
+    "data/public/latest_bronze.manifest.json",
+    "data/public/latest_payments.csv",
+    "data/public/status.json",
+}
 
 
 def unsafe_paths(paths: list[str]) -> list[str]:
@@ -28,10 +33,11 @@ def unsafe_paths(paths: list[str]) -> list[str]:
         path = PurePosixPath(raw)
         parts = path.parts
         name = path.name.lower()
-        if not parts or raw == ".env.example" or raw.startswith(ALLOWED_PUBLIC_PREFIX):
+        if not parts or raw == ".env.example" or raw in ALLOWED_PUBLIC_FILES:
             continue
         if (
-            any(part in BLOCKED_DIRECTORIES for part in parts)
+            (len(parts) >= 2 and parts[0] == "data" and parts[1] == "public")
+            or any(part in BLOCKED_DIRECTORIES for part in parts)
             or name in BLOCKED_NAMES
             or name.startswith(".env.")
             or name.endswith(BLOCKED_SUFFIXES)
