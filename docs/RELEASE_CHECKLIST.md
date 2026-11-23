@@ -24,6 +24,14 @@ M49 fixes deterministic retry classification; M50 adds bounded synthetic scale; 
 
 Do not check off the release-commit or tagged-release requirements until the exact SHA and published release are independently verified.
 
+## M69–M71 publication and release evidence
+
+- M69 [PR #51](https://github.com/gurusumiran25/pulseforge/pull/51) merged after two successful PR checks; its scoped publisher-code push trigger is intended to bootstrap a new feed without self-triggering on generated data commits.
+- The 2026-11-23 public status now contains `payment_sidecar` with schema version 1, **241** rows and a SHA-256 digest. Its `bronze_sha256` matches the SHA in `latest_bronze.manifest.json`. The published CSV file exists. This is evidence of one payment publication, not consecutive daily scheduled executions or browser UI acceptance.
+- M70 [PR #52](https://github.com/gurusumiran25/pulseforge/pull/52) merged after eight successful PR workflows, including Streamlit widget rendering and portfolio release acceptance. These are PR-head CI checks, not evidence for a future tagged release SHA.
+- Browser-level verification of the hosted Streamlit customer analytics tables remains **open**; follow [M71 acceptance instructions](M53_STREAMLIT_CLOUD.md#m71-live-customer-analytics-acceptance).
+- Do not mark the repository as fully production-deployed: the public feed is synthetic and the broker/monitoring services are not established as continuously hosted.
+
 ## Scope boundary
 
 The target is a **reproducible portfolio demonstration** using synthetic data, not an always-on production service. Airflow, distributed storage, continuous cloud deployment and operational SLAs are not required to declare the portfolio release complete. They remain optional follow-on engineering work.
