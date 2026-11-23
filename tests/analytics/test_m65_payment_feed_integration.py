@@ -1,12 +1,16 @@
 """M65 integration: sidecar and Bronze are produced from one synthetic snapshot."""
 import json
+import os
 from datetime import date
+
+import pytest
 
 from services.analytics.daily_public_feed import build_public_feed
 from services.analytics.payment_sidecar import load_payment_sidecar
 from services.analytics.bronze_manifest import inspect_bronze
 
 
+@pytest.mark.skipif(os.getenv("PULSEFORGE_RUN_M53_DAILY") != "1", reason="Real dbt integration opt-in")
 def test_daily_public_feed_publishes_verified_payment_sidecar(tmp_path):
     output = tmp_path / "public"
     status = build_public_feed(output, as_of=date(2026, 11, 23), days=2, sessions_per_day=3)
