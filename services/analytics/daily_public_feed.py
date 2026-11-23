@@ -99,8 +99,7 @@ def build_public_feed(output_dir, *, as_of=None, days=14, sessions_per_day=40):
                   "status": "passed"}
         status["payment_sidecar"] = payment_manifest
         status_temp = target / "status.json.new"
-        status_temp.write_text(json.dumps(status, sort_keys=True, indent=2) + "
-", encoding="utf-8")
+        status_temp.write_text(json.dumps(status, sort_keys=True, indent=2) + "\n", encoding="utf-8")
         os.replace(status_temp, target / "status.json")
         return status
 
