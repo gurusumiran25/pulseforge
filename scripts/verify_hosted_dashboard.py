@@ -6,8 +6,6 @@ import argparse
 import json
 from datetime import datetime, timezone
 
-from playwright.sync_api import sync_playwright
-
 APP_URL = "https://pulseforge-analytics.streamlit.app/"
 REQUIRED = (
     "Source: public GitHub synthetic feed",
@@ -34,6 +32,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--screenshot", default="dashboard-acceptance.png")
     args = parser.parse_args()
+    from playwright.sync_api import sync_playwright
+
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=True)
         page = browser.new_page(viewport={"width": 1440, "height": 1000})
