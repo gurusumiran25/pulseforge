@@ -95,14 +95,14 @@ st.caption("D1/D7/D14/D30 count activity on exactly that UTC day after first obs
 
 
 st.subheader("Synthetic customer purchase analytics")
-st.caption("Gross RFM and observed net value are historical measures, not predictive CLV. Values are isolated by currency.")
+st.caption("Gross RFM and observed net value are historical measures, not predictive CLV. Values are isolated by currency. Payment records are filtered by UTC activity dates and selected users; they are not exact session-start cohorts.")
 if remote_enabled:
     try:
         @st.cache_data(ttl=3600, show_spinner=False)
-        def get_payment_events(bronze_sha):
-            return load_verified_payment_feed({"sha256": bronze_sha, "generated_at_utc": feed_manifest["generated_at_utc"]})
+        def get_payment_events(bronze_sha, generated_at_utc):
+            return load_verified_payment_feed({"sha256": bronze_sha, "generated_at_utc": generated_at_utc})
 
-        payment_events = get_payment_events(feed_manifest["sha256"])
+        payment_events = get_payment_events(feed_manifest["sha256"], feed_manifest["generated_at_utc"])
         selected_users = {event["user_id"] for event in events}
         selected_dates = {event["event_time"].date() for event in events}
         payment_events = [
@@ -119,7 +119,7 @@ if remote_enabled:
             st.markdown("**Observed payment value (per currency)**")
             st.dataframe(values["customers"], use_container_width=True, hide_index=True)
         else:
-            st.caption("No payments in the selected session-start period.")
+            st.caption("No payments on the selected UTC activity dates for the selected users.")
     except Exception as exc:
         st.warning(f"Payment analytics temporarily unavailable ({type(exc).__name__}); main verified dashboard remains available.")
 else:
