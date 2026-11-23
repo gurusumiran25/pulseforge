@@ -45,3 +45,12 @@ Do not mark any checkbox complete solely because a source file exists. Verify ea
 - `data/public/status.json` on main reports a successful 2026-11-23 publication with 2,669 events, 560 sessions and eight quality checks. This proves one published snapshot, **not** multiple consecutive scheduled runs.
 - These are PR-head checks, not independent evidence that all workflows passed on the final tagged release SHA. Keep the release checklist unchecked until each exact release gate has independently verified evidence.
 - Remaining external gates: confirm consecutive daily publication and independent health runs; deploy and visually test Streamlit Community Cloud; audit release SHA, repository contents and security; publish a tagged release with documented limitations.
+
+## M72–M77 final verification status
+
+- M72 [PR #54](https://github.com/gurusumiran25/pulseforge/pull/54): independent feed health is chained to successful publisher completion via `workflow_run`.
+- M73 [PR #55](https://github.com/gurusumiran25/pulseforge/pull/55) and M75 [PR #57](https://github.com/gurusumiran25/pulseforge/pull/57): tracked-filename hygiene gate and strict four-file public feed allowlist. This is **not** a complete secrets-content or Git-history scan.
+- M74 [PR #56](https://github.com/gurusumiran25/pulseforge/pull/56) and M76 [PR #58](https://github.com/gurusumiran25/pulseforge/pull/58): remote CDN integrity smoke and status/metrics parity checks. Successful PR tests do **not** prove the scheduled remote smoke has run successfully.
+- M77 adds a manual **release candidate verification** workflow: from Actions, select `M77 release candidate verification`, enter the exact 40-character candidate commit SHA, and retain the resulting run URL. It checks the exact checkout SHA, clean install, portfolio tests, tracked-artifact hygiene, local published feed and remote CDN. The run may fail if the feed is stale; do not waive freshness without recording why.
+- Before tagging, separately verify Redpanda workflow on the **same** candidate SHA, Streamlit browser acceptance with screenshot, at least two consecutive scheduled daily publisher runs and their independent monitors, and repository content/history security review.
+- **Do not create a release tag or check off the eleven gates merely because M77 workflow exists.** A successful run with a recorded candidate SHA and additional external evidence is required.
