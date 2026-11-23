@@ -1,6 +1,7 @@
 """Verified GitHub feed rejects tampered and oversized content."""
 import hashlib
 import json
+from datetime import datetime, timezone
 
 import pytest
 
@@ -8,7 +9,7 @@ from apps.dashboard import public_feed
 
 
 def test_rejects_tampered_remote_csv(monkeypatch):
-    manifest = json.dumps({"schema_version": 1, "rows": 1, "sha256": hashlib.sha256(b"correct").hexdigest()}).encode()
+    manifest = json.dumps({"schema_version": 1, "rows": 1, "sha256": hashlib.sha256(b"correct").hexdigest(), "generated_at_utc": datetime.now(timezone.utc).isoformat()}).encode()
     def fake_download(name, limit):
         return manifest if name.endswith(".json") else b"tampered"
     monkeypatch.setattr(public_feed, "_download", fake_download)
