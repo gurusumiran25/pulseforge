@@ -40,6 +40,7 @@ def test_empty_remote_payments_rejected(monkeypatch):
         }),
     )
     monkeypatch.setattr(smoke, "load_verified_payment_feed", lambda manifest: [])
+    monkeypatch.setattr(smoke, "_download", lambda name, limit: b"{}")
     with pytest.raises(ValueError, match="empty"):
         smoke.verify_remote_publication()
 
@@ -56,6 +57,7 @@ def test_stale_remote_feed_rejected(monkeypatch):
         smoke, "load_verified_payment_feed",
         lambda manifest: [{"event_name": "payment_succeeded"}],
     )
+    monkeypatch.setattr(smoke, "_download", lambda name, limit: b"{}")
     with pytest.raises(ValueError, match="stale"):
         smoke.verify_remote_publication()
 
