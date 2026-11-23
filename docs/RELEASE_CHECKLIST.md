@@ -29,3 +29,11 @@ Do not check off the release-commit or tagged-release requirements until the exa
 The target is a **reproducible portfolio demonstration** using synthetic data, not an always-on production service. Airflow, distributed storage, continuous cloud deployment and operational SLAs are not required to declare the portfolio release complete. They remain optional follow-on engineering work.
 
 Do not mark any checkbox complete solely because a source file exists. Verify each acceptance criterion against CI or a documented test run.
+
+## Current verification evidence (2026-11-23)
+
+- M54 PR [#36](https://github.com/gurusumiran25/pulseforge/pull/36) merged after eight successful PR workflows, including the standard tests, dashboard checks, daily-feed integration and M52 release acceptance.
+- M55 PR [#37](https://github.com/gurusumiran25/pulseforge/pull/37) merged after eight successful PR workflows, including real Redpanda, the M55 health monitor, M52 acceptance, real warehouse quality and the one-command demo.
+- `data/public/status.json` on main reports a successful 2026-11-23 publication with 2,669 events, 560 sessions and eight quality checks. This proves one published snapshot, **not** multiple consecutive scheduled runs.
+- These are PR-head checks, not independent evidence that all workflows passed on the final tagged release SHA. Keep the release checklist unchecked until each exact release gate has independently verified evidence.
+- Remaining external gates: confirm consecutive daily publication and independent health runs; deploy and visually test Streamlit Community Cloud; audit release SHA, repository contents and security; publish a tagged release with documented limitations.
