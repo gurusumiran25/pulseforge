@@ -20,6 +20,19 @@ from services.generator.journey_generator import generate_customer_journey
 from services.storage.sqlite_store import SQLiteEventStore
 
 
+def synthetic_user_id(cohort, index, *, repeat_users=10):
+    """Stable synthetic identities for a subset of daily sessions.
+
+    Returning identities are deliberately reused across days; remaining
+    identities are date-scoped to simulate new users. No real identifiers.
+    """
+    if index < 0 or repeat_users < 0:
+        raise ValueError("index and repeat_users must be nonnegative")
+    if index < repeat_users:
+        return f"synthetic_returning_{index:03d}"
+    return f"synthetic_new_{cohort.isoformat()}_{index:03d}"
+
+
 def build_public_feed(output_dir, *, as_of=None, days=14, sessions_per_day=40):
     if not 1 <= days <= 31 or not 1 <= sessions_per_day <= 200:
         raise ValueError("days must be 1..31 and sessions_per_day 1..200")
@@ -38,7 +51,8 @@ def build_public_feed(output_dir, *, as_of=None, days=14, sessions_per_day=40):
                 journey = generate_customer_journey(seed=seed)
                 start = datetime.combine(cohort, time(12, 0), timezone.utc)
                 shifted = [
-                    event.model_copy(update={"event_time": start + timedelta(seconds=30 * i)})
+                    event.model_copy(update={"event_time": start + timedelta(seconds=30 * i),
+                                             "user_id": synthetic_user_id(cohort, index)})
                     for i, event in enumerate(journey)
                 ]
                 store.insert_events_bulk(shifted)
