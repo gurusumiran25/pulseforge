@@ -4,6 +4,9 @@ on:
   schedule:
     - cron: '0 6 * * *'
   workflow_dispatch:
+  workflow_run:
+    workflows: ['Daily synthetic dashboard refresh']
+    types: [completed]
   pull_request:
     paths:
       - '.github/workflows/m55-public-feed-health.yml'
@@ -26,10 +29,13 @@ permissions:
 
 jobs:
   feed-health:
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_repository.full_name == 'gurusumiran25/pulseforge')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -37,7 +43,7 @@ jobs:
         run: python -m pip install -e '.[dev]'
       - name: Validate publication freshness, integrity, and warehouse status
         run: |
-          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "${{ github.event_name }}" = "push" ]; then
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "${{ github.event_name }}" = "push" ] || [ "${{ github.event_name }}" = "workflow_run" ]; then
             python -m services.analytics.public_feed_health --directory data/public --max-age-hours 36 --require-payment-sidecar
           else
             python -m services.analytics.public_feed_health --directory data/public --max-age-hours 36
