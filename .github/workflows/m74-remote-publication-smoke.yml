@@ -24,13 +24,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || 'main' }}
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - name: Install dashboard and testing dependencies
         run: python -m pip install -e '.[dev]'
       - name: Validate public CDN Bronze and payment feed with bounded retries
+        if: github.event_name != 'pull_request'
         run: python scripts/verify_remote_publication.py --max-age-hours 36 --attempts 4 --retry-seconds 20
       - name: Run remote smoke regressions
         run: python -m pytest -q tests/release/test_m74_remote_publication.py
