@@ -26,7 +26,7 @@ def validate_publication_timestamp(manifest, *, now=None):
     """Reject absent, naive, invalid, or implausibly future-dated feed timestamps."""
     raw = manifest.get("generated_at_utc")
     if not isinstance(raw, str):
-        raise ValueError("Missing public feed publication timestamp")
+        raise TypeError("Missing public feed publication timestamp")
     try:
         published = datetime.fromisoformat(raw.replace("Z", "+00:00"))
     except ValueError as exc:
