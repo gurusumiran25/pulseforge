@@ -16,6 +16,9 @@ except ImportError:
 
 from apps.dashboard.metrics import SEED_PATH, STAGES, filter_complete_sessions, load_events, summarize
 from apps.dashboard.public_feed import load_verified_public_feed
+from apps.dashboard.payment_feed import load_verified_payment_feed
+from services.analytics.rfm import calculate_rfm
+from services.analytics.customer_value import calculate_observed_customer_value
 from services.analytics.retention import calculate_retention
 from apps.dashboard.retention_view import mask_immature_retention
 
@@ -89,6 +92,38 @@ if retention["cohorts"]:
 else:
     st.caption("No observed user activity in the selected period.")
 st.caption("D1/D7/D14/D30 count activity on exactly that UTC day after first observation. Unobservable follow-up days display blank rather than zero. Date filtering limits the observation window, so these are not lifetime acquisition cohorts.")
+
+
+st.subheader("Synthetic customer purchase analytics")
+st.caption("Gross RFM and observed net value are historical measures, not predictive CLV. Values are isolated by currency.")
+if remote_enabled:
+    try:
+        @st.cache_data(ttl=3600, show_spinner=False)
+        def get_payment_events(bronze_sha):
+            return load_verified_payment_feed({"sha256": bronze_sha, "generated_at_utc": feed_manifest["generated_at_utc"]})
+
+        payment_events = get_payment_events(feed_manifest["sha256"])
+        selected_users = {event["user_id"] for event in events}
+        selected_dates = {event["event_time"].date() for event in events}
+        payment_events = [
+            event for event in payment_events
+            if event["user_id"] in selected_users
+            and datetime.fromisoformat(event["event_time"].replace("Z", "+00:00")).date() in selected_dates
+        ]
+        if payment_events:
+            as_of = max(selected_dates)
+            rfm = calculate_rfm(payment_events, as_of_date=as_of)
+            values = calculate_observed_customer_value(payment_events)
+            st.markdown("**RFM segments (gross successful orders)**")
+            st.dataframe(rfm["customers"], use_container_width=True, hide_index=True)
+            st.markdown("**Observed payment value (per currency)**")
+            st.dataframe(values["customers"], use_container_width=True, hide_index=True)
+        else:
+            st.caption("No payments in the selected session-start period.")
+    except Exception as exc:
+        st.warning(f"Payment analytics temporarily unavailable ({type(exc).__name__}); main verified dashboard remains available.")
+else:
+    st.caption("Payment analytics require the verified public synthetic payment sidecar.")
 
 st.subheader("Daily event activity (UTC)")
 st.line_chart(summary["daily_activity"], x="date", y=["events", "active_users"])
