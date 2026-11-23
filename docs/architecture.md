@@ -107,6 +107,11 @@ See [M43 enforced quality](M43_ENFORCED_WAREHOUSE_QUALITY.md), [M44 clean instal
 
 ## 7. Scheduled public synthetic feed (M53–M55)
 
-The [daily GitHub Actions publisher](../.github/workflows/daily-public-feed.yml) generates a disposable rolling 14-day synthetic dataset, persists to SQLite, runs real dbt DuckDB warehouse transformations, checks semantic quality, then publishes `data/public/latest_bronze.csv`, its SHA-256 manifest and `status.json` together in one Git commit. The Streamlit app reads verified Bronze CSV and computes dashboard metrics; it does not query Gold marts directly. The public feed is independent of the live Redpanda ingestion path.
+The [daily GitHub Actions publisher](../.github/workflows/daily-public-feed.yml) generates a disposable rolling 14-day synthetic dataset, persists to SQLite, runs real dbt DuckDB warehouse transformations, checks semantic quality, then publishes `data/public/latest_bronze.csv`, its SHA-256 manifest, `data/public/latest_payments.csv`, and `status.json` together in one Git commit. Payment metadata in the status file binds the payment sidecar to the Bronze digest. The Streamlit app reads verified Bronze CSV and computes dashboard metrics; it does not query Gold marts directly. The public feed is independent of the live Redpanda ingestion path.
 
 The [independent M55 health monitor](../.github/workflows/m55-public-feed-health.yml) runs on a separate daily schedule, validates publication timestamp, 36-hour freshness, hash, row count and quality status. A failed workflow is observable in GitHub Actions; there is no external notification or automated remediation guarantee. GitHub scheduled jobs may be delayed, and the Streamlit Community Cloud deployment requires separate account-owner action.
+
+
+## 8. Release verification boundaries (M77–M82)
+
+The scheduled publisher is independent of the Kafka/Redpanda ingestion demonstration. A GitHub commit groups the four public artifacts, but separate CDN requests may briefly observe inconsistent cached versions. Dashboard SHA-256 and cross-artifact checks fail closed rather than silently rendering inconsistent payments; remote smoke checks retry boundedly. Streamlit Cloud reads the non-sensitive public-feed flag from secrets when the process environment does not override it (M81/M82). Live hosted-browser acceptance, consecutive scheduled runs, and independent monitoring are release gates requiring actual GitHub Actions execution evidence, not merely PR test results.
