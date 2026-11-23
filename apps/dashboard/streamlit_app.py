@@ -17,6 +17,7 @@ except ImportError:
 from apps.dashboard.metrics import SEED_PATH, STAGES, filter_complete_sessions, load_events, summarize
 from apps.dashboard.public_feed import load_verified_public_feed
 from services.analytics.retention import calculate_retention
+from apps.dashboard.retention_view import mask_immature_retention
 
 
 st.set_page_config(page_title="PulseForge | Product Intelligence", page_icon="📊", layout="wide")
@@ -82,10 +83,12 @@ st.dataframe(summary["daily_funnel"], use_container_width=True, hide_index=True)
 st.subheader("User activity retention by first observed UTC date")
 retention = calculate_retention(events)
 if retention["cohorts"]:
-    st.dataframe(retention["cohorts"], use_container_width=True, hide_index=True)
+    st.dataframe(mask_immature_retention(
+        retention["cohorts"], observation_end_date=max(event["event_time"].date() for event in events)
+    ), use_container_width=True, hide_index=True)
 else:
     st.caption("No observed user activity in the selected period.")
-st.caption("D1/D7/D14/D30 count activity on exactly that UTC day after first observation. Recent cohorts have incomplete follow-up; zero does not necessarily mean churn. Date filtering limits the observation window, so these are not lifetime acquisition cohorts.")
+st.caption("D1/D7/D14/D30 count activity on exactly that UTC day after first observation. Unobservable follow-up days display blank rather than zero. Date filtering limits the observation window, so these are not lifetime acquisition cohorts.")
 
 st.subheader("Daily event activity (UTC)")
 st.line_chart(summary["daily_activity"], x="date", y=["events", "active_users"])
