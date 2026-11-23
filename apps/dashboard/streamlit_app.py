@@ -34,7 +34,10 @@ st.caption("Product intelligence • synthetic events, not production data")
 def public_feed_enabled():
     configured = os.environ.get("PULSEFORGE_PUBLIC_FEED")
     if configured is None:
-        configured = st.secrets.get("PULSEFORGE_PUBLIC_FEED", "0")
+        try:
+            configured = st.secrets.get("PULSEFORGE_PUBLIC_FEED", "0")
+        except FileNotFoundError:
+            configured = "0"
     return str(configured).strip().lower() in {"1", "true", "yes", "on"}
 
 
