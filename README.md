@@ -219,6 +219,12 @@ Recovery planning is preview-only by default. Production automatic self-healing 
 - [ ] Airflow orchestration
 - [ ] Continuous monitoring and production deployment hardening
 
+## Scheduled public synthetic dashboard feed
+
+The public-data pipeline runs daily via [GitHub Actions](.github/workflows/daily-public-feed.yml) at 02:30 UTC (08:00 IST). It generates a rolling 14-day synthetic dataset, builds real dbt DuckDB marts, checks semantic quality and publishes a CSV, SHA-256 manifest and status together in `data/public/`. The independent [M55 feed-health monitor](.github/workflows/m55-public-feed-health.yml) runs at 06:00 UTC (11:30 IST) and fails when the published feed is stale (over 36 hours), corrupted or inconsistent with the quality status. Schedules can be delayed by GitHub and do not constitute an uptime SLA.
+
+The Streamlit app supports this feed with `PULSEFORGE_PUBLIC_FEED=1` and verifies integrity before rendering. **A public Streamlit Community Cloud deployment is not yet verified**; see [deployment instructions](docs/M53_STREAMLIT_CLOUD.md). This is a separately scheduled synthetic warehouse pipeline, not continuously streaming Kafka events into DuckDB.
+
 ## Warehouse and dashboard
 
 The repository includes dbt DuckDB Bronze/Silver/Gold transformations, a one-shot SQLite-to-Bronze batch builder with integrity manifests, a semantic quality gate, and a Streamlit dashboard. The dashboard reads Bronze-format CSV, not DuckDB directly. See [M43 quality-gate documentation](docs/M43_ENFORCED_WAREHOUSE_QUALITY.md) and [M44 setup](docs/M44_REPRODUCIBLE_SETUP.md).

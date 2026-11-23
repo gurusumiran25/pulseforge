@@ -104,3 +104,9 @@ The one-shot batch is invoked explicitly, not scheduled. The quality gate blocks
 **Not implemented as a continuously deployed service:** Airflow orchestration, direct Kafka-to-warehouse continuous ingestion, distributed warehouse infrastructure, cloud monitoring SLAs and automated production recovery.
 
 See [M43 enforced quality](M43_ENFORCED_WAREHOUSE_QUALITY.md), [M44 clean install](M44_REPRODUCIBLE_SETUP.md) and [release acceptance checklist](RELEASE_CHECKLIST.md).
+
+## 7. Scheduled public synthetic feed (M53–M55)
+
+The [daily GitHub Actions publisher](../.github/workflows/daily-public-feed.yml) generates a disposable rolling 14-day synthetic dataset, persists to SQLite, runs real dbt DuckDB warehouse transformations, checks semantic quality, then publishes `data/public/latest_bronze.csv`, its SHA-256 manifest and `status.json` together in one Git commit. The Streamlit app reads verified Bronze CSV and computes dashboard metrics; it does not query Gold marts directly. The public feed is independent of the live Redpanda ingestion path.
+
+The [independent M55 health monitor](../.github/workflows/m55-public-feed-health.yml) runs on a separate daily schedule, validates publication timestamp, 36-hour freshness, hash, row count and quality status. A failed workflow is observable in GitHub Actions; there is no external notification or automated remediation guarantee. GitHub scheduled jobs may be delayed, and the Streamlit Community Cloud deployment requires separate account-owner action.
