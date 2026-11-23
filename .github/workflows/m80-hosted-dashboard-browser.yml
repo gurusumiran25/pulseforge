@@ -1,0 +1,42 @@
+name: M80 hosted Streamlit browser acceptance
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/m80-hosted-dashboard-browser.yml'
+      - 'scripts/verify_hosted_dashboard.py'
+      - 'tests/release/test_m80_hosted_dashboard.py'
+
+permissions:
+  contents: read
+
+jobs:
+  browser-acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || 'main' }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install browser test dependencies
+        run: python -m pip install pytest playwright
+      - name: Run acceptance regressions
+        run: python -m pytest -q tests/release/test_m80_hosted_dashboard.py
+      - name: Install Chromium
+        if: github.event_name == 'workflow_dispatch'
+        run: python -m playwright install --with-deps chromium
+      - name: Inspect hosted dashboard with real Chromium
+        if: github.event_name == 'workflow_dispatch'
+        run: python scripts/verify_hosted_dashboard.py --screenshot dashboard-acceptance.png
+      - name: Upload browser screenshot
+        if: always() && github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: m80-hosted-dashboard-evidence
+          path: dashboard-acceptance.png
+          if-no-files-found: ignore
+          retention-days: 14
