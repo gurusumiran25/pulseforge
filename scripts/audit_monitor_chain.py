@@ -1,7 +1,6 @@
-"""Verify independent monitor completion for successful scheduled publisher runs.
+"""Check temporal evidence of postpublisher monitor runs.
 
-Uses read-only GitHub Actions run listings and matches workflow_run events by
-head_sha and creation time; never counts PR test jobs as live evidence.
+This cannot establish exact triggering run IDs from workflow-run listings alone.
 """
 import argparse
 import json
@@ -36,13 +35,11 @@ def monitor_evidence(publisher_runs, health_runs, remote_runs, *, required=2):
                     r for r in candidates
                     if r.get("event") == "workflow_run"
                     and r.get("status") == "completed"
-                    and r.get("head_sha") == publish.get("head_sha")
                     and timestamp(r) >= timestamp(publish)
                 ),
                 key=timestamp,
             )
-            # SHA alone can be shared by multiple publisher executions.
-            # Restrict to the first 90 minutes after each publisher started.
+            # Time-window association is not proof of exact triggering run ID.
             matches = [r for r in matches if (timestamp(r) - timestamp(publish)).total_seconds() <= 5400]
             monitors[name] = {
                 "verified": bool(matches and matches[0].get("conclusion") == "success"),
@@ -55,6 +52,7 @@ def monitor_evidence(publisher_runs, health_runs, remote_runs, *, required=2):
             "remote": monitors["remote"],
         })
     return {
+        "association": "temporal_only_not_exact_trigger_proof",
         "verified": len(evidence) == required and all(
             row["publisher_success"] and row["health"]["verified"] and row["remote"]["verified"]
             for row in evidence
