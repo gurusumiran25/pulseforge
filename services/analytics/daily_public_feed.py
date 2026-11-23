@@ -14,7 +14,10 @@ from pathlib import Path
 
 from apps.dashboard.metrics import load_events, summarize
 from services.analytics.bronze_manifest import verify_manifest
-from services.analytics.payment_sidecar import export_payment_sidecar, load_payment_sidecar
+from services.analytics.payment_sidecar import (
+    export_payment_sidecar,
+    load_payment_sidecar,
+)
 from services.analytics.warehouse_health import check_warehouse
 from services.analytics.warehouse_run_report import run_reported_batch
 from services.generator.journey_generator import generate_customer_journey
