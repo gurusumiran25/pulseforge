@@ -56,9 +56,7 @@ def main() -> None:
     paths = [p.decode("utf-8", errors="replace") for p in result.stdout.split(b"\0") if p]
     failures = unsafe_paths(paths)
     if failures:
-        raise SystemExit("Blocked tracked artifacts:
-" + "
-".join(failures))
+        raise SystemExit("Blocked tracked artifacts:\n" + "\n".join(failures))
     print(f"Tracked artifact hygiene passed for {len(paths)} files; content/history scanning still required.")
 
 
