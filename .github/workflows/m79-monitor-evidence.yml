@@ -1,0 +1,32 @@
+name: M79 independent monitor evidence
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/m79-monitor-evidence.yml'
+      - 'scripts/audit_monitor_chain.py'
+      - 'tests/release/test_m79_monitor_evidence.py'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || 'main' }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate monitor audit regressions
+        run: python -m pip install pytest && python -m pytest -q tests/release/test_m79_monitor_evidence.py
+      - name: Audit actual monitor executions
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python -m scripts.audit_monitor_chain --required 2
