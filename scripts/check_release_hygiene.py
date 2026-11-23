@@ -28,7 +28,7 @@ def unsafe_paths(paths: list[str]) -> list[str]:
         path = PurePosixPath(raw)
         parts = path.parts
         name = path.name.lower()
-        if not parts or raw.startswith(ALLOWED_PUBLIC_PREFIX):
+        if not parts or raw == ".env.example" or raw.startswith(ALLOWED_PUBLIC_PREFIX):
             continue
         if (
             any(part in BLOCKED_DIRECTORIES for part in parts)
