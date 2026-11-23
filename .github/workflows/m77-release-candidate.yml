@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       release_ref:
-        description: 'Commit SHA or tag to verify (never use an untrusted fork ref)'
+        description: 'Exact 40-character commit SHA to verify'
         required: true
         type: string
 
