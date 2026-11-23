@@ -28,7 +28,17 @@ st.title("PulseForge")
 if st_autorefresh is not None:
     st_autorefresh(interval=3_600_000, key="pulseforge-hourly-feed-refresh")
 st.caption("Product intelligence • synthetic events, not production data")
-remote_enabled = os.environ.get("PULSEFORGE_PUBLIC_FEED", "0") == "1"
+# Streamlit Cloud stores app configuration in st.secrets; local deployments may
+# supply the same non-sensitive flag through the process environment.
+# Explicit environment settings take precedence when present.
+def public_feed_enabled():
+    configured = os.environ.get("PULSEFORGE_PUBLIC_FEED")
+    if configured is None:
+        configured = st.secrets.get("PULSEFORGE_PUBLIC_FEED", "0")
+    return str(configured).strip().lower() in {"1", "true", "yes", "on"}
+
+
+remote_enabled = public_feed_enabled()
 source_path = Path(os.environ.get("PULSEFORGE_DASHBOARD_CSV", str(SEED_PATH))).expanduser()
 
 @st.cache_data(ttl=3600, show_spinner=False)
