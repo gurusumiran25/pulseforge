@@ -4,7 +4,7 @@
 
 GitHub Actions runs the daily publisher at **02:30 UTC (08:00 IST)**, with a manual `workflow_dispatch` option. The run generates a fresh **rolling 14-day** synthetic dataset (40 sessions/day), inserts into a disposable SQLite database, executes real dbt DuckDB marts, verifies the eight semantic checks and warehouse health, reconciles dashboard counts, then commits **CSV + SHA-256 manifest + status JSON together** to `data/public/` in one Git commit. No operational database, credentials or customer data is published.
 
-The Streamlit Community Cloud app uses the fixed public raw GitHub URL and verifies CSV SHA-256 and row count against the manifest. Its cache expires every **3600 seconds**, so an already-running app can fetch a newer feed on its next rerun after expiry. GitHub Actions scheduled jobs may be delayed or disabled; there is **no guarantee of a refresh at exactly 08:00 IST**. GitHub raw CDN cache propagation may briefly produce a mismatch, which fails closed instead of displaying unverified data.
+The Streamlit Community Cloud app uses the fixed public raw GitHub URL and verifies CSV SHA-256, row count, and a timezone-aware publication timestamp against the manifest. Missing, malformed, naive, or more than ten minutes future-dated timestamps fail closed; feeds older than 36 hours remain visible with a stale warning. Its cache expires every **3600 seconds**, so an already-running app can fetch a newer feed on its next rerun after expiry. GitHub Actions scheduled jobs may be delayed or disabled; there is **no guarantee of a refresh at exactly 08:00 IST**. GitHub raw CDN cache propagation may briefly produce a mismatch, which fails closed instead of displaying unverified data.
 
 ## Deploy Streamlit Community Cloud (account owner action)
 
