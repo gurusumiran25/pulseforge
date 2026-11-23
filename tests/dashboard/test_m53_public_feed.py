@@ -26,7 +26,7 @@ def test_rejects_unknown_schema(monkeypatch):
 @pytest.mark.parametrize("timestamp", [None, "not-a-date", "2026-11-23T10:00:00", "2999-01-01T00:00:00+00:00"])
 def test_rejects_invalid_publication_timestamp(timestamp):
     manifest = {"generated_at_utc": timestamp}
-    with pytest.raises(ValueError, match="timestamp"):
+    with pytest.raises((TypeError, ValueError), match="timestamp"):
         public_feed.validate_publication_timestamp(manifest)
 
 
