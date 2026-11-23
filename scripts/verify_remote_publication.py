@@ -8,12 +8,13 @@ import time
 from datetime import datetime, timezone
 
 from apps.dashboard.payment_feed import load_verified_payment_feed
-from apps.dashboard.public_feed import load_verified_public_feed
+from apps.dashboard.public_feed import MAX_MANIFEST_BYTES, _download, load_verified_public_feed
 
 
 def verify_remote_publication(*, max_age_hours=36):
     events, manifest = load_verified_public_feed()
     payments = load_verified_payment_feed(manifest)
+    status = json.loads(_download("status.json", MAX_MANIFEST_BYTES))
     published = datetime.fromisoformat(
         manifest["generated_at_utc"].replace("Z", "+00:00")
     )
@@ -23,6 +24,15 @@ def verify_remote_publication(*, max_age_hours=36):
     paid = sum(event["event_name"] == "payment_succeeded" for event in payments)
     if not events or not payments or not paid:
         raise ValueError("Remote feed unexpectedly empty")
+    if status.get("status") != "passed" or status.get("quality_checks") != 8:
+        raise ValueError("Remote publication quality status failed")
+    if status.get("events") != len(events) or status.get("paid_sessions") != paid:
+        raise ValueError("Remote publication status counts disagree with verified feed")
+    if status.get("as_of_utc") != published.date().isoformat():
+        raise ValueError("Remote publication date disagrees with manifest")
+    metadata = status.get("payment_sidecar", {})
+    if metadata.get("rows") != len(payments) or metadata.get("bronze_sha256") != manifest.get("sha256"):
+        raise ValueError("Remote payment status disagrees with verified feed")
     return {
         "healthy": True,
         "generated_at_utc": manifest["generated_at_utc"],
