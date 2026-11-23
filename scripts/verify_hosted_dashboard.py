@@ -51,6 +51,23 @@ def main():
             print(json.dumps(outcome, indent=2))
             if not outcome["passed"]:
                 raise SystemExit("Hosted dashboard browser acceptance FAILED")
+        except Exception as exc:
+            # Preserve browser evidence even when the hosted app fails to render.
+            try:
+                page.screenshot(path=args.screenshot, full_page=True, timeout=15000)
+            except Exception as screenshot_error:
+                print(f"Diagnostic screenshot unavailable: {type(screenshot_error).__name__}", flush=True)
+            try:
+                body = page.locator("body").inner_text(timeout=5000)
+                print(json.dumps({
+                    "url": page.url,
+                    "failure_type": type(exc).__name__,
+                    "visible_text_excerpt": body[:2500],
+                    "text_check": check_text(body),
+                }, indent=2), flush=True)
+            except Exception as diagnostic_error:
+                print(f"Page text unavailable: {type(diagnostic_error).__name__}", flush=True)
+            raise
         finally:
             browser.close()
 
