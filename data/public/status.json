@@ -3,6 +3,12 @@
   "days": 14,
   "events": 2669,
   "paid_sessions": 241,
+  "payment_sidecar": {
+    "bronze_sha256": "d5a6aab39e910f2dd3b7226a823cc6d73844d85dd0230e82f34f04c7c3b23915",
+    "rows": 241,
+    "schema_version": 1,
+    "sha256": "74da56a0dc526d26f714a9288b86b4eb1f188bd0b1dadee46dc6fe57dc6566c7"
+  },
   "quality_checks": 8,
   "sessions": 560,
   "sessions_per_day": 40,
