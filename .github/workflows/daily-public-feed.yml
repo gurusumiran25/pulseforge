@@ -4,6 +4,13 @@ on:
   schedule:
     - cron: '30 2 * * *'
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/daily-public-feed.yml'
+      - 'services/analytics/daily_public_feed.py'
+      - 'services/analytics/payment_sidecar.py'
+      - 'services/analytics/public_feed_health.py'
 
 permissions:
   contents: write
