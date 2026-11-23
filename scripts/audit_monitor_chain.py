@@ -9,6 +9,8 @@ from datetime import datetime, timezone
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
+from scripts.audit_scheduled_refresh import scheduled_evidence
+
 REPO = "gurusumiran25/pulseforge"
 WORKFLOWS = {
     "publisher": "daily-public-feed.yml",
@@ -51,9 +53,10 @@ def monitor_evidence(publisher_runs, health_runs, remote_runs, *, required=2):
             "health": monitors["health"],
             "remote": monitors["remote"],
         })
+    scheduled_ok = scheduled_evidence(publisher_runs, required=required)["verified"]
     return {
         "association": "temporal_only_not_exact_trigger_proof",
-        "verified": len(evidence) == required and all(
+        "verified": scheduled_ok and len(evidence) == required and all(
             row["publisher_success"] and row["health"]["verified"] and row["remote"]["verified"]
             for row in evidence
         ),
