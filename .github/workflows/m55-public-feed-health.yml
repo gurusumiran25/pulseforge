@@ -1,0 +1,38 @@
+name: M55 public feed health monitor
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/m55-public-feed-health.yml'
+      - 'services/analytics/public_feed_health.py'
+      - 'tests/integration/test_m55_public_feed_health.py'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/m55-public-feed-health.yml'
+      - 'services/analytics/public_feed_health.py'
+      - 'tests/integration/test_m55_public_feed_health.py'
+
+permissions:
+  contents: read
+
+jobs:
+  feed-health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install package and test dependencies
+        run: python -m pip install -e '.[dev]'
+      - name: Validate publication freshness, integrity, and warehouse status
+        run: python -m services.analytics.public_feed_health --directory data/public --max-age-hours 36
+      - name: Run health-gate regressions
+        run: python -m pytest -q tests/integration/test_m55_public_feed_health.py
+      - name: Lint health-gate modules
+        run: python -m ruff check services/analytics/public_feed_health.py tests/integration/test_m55_public_feed_health.py
