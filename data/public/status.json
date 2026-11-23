@@ -1,0 +1,10 @@
+{
+  "as_of_utc": "2026-11-23",
+  "days": 14,
+  "events": 2669,
+  "paid_sessions": 241,
+  "quality_checks": 8,
+  "sessions": 560,
+  "sessions_per_day": 40,
+  "status": "passed"
+}
