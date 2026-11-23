@@ -36,10 +36,10 @@ jobs:
         if: github.event_name != 'pull_request'
         run: python -m playwright install --with-deps chromium
       - name: Inspect hosted dashboard with real Chromium
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name != 'pull_request'
         run: python scripts/verify_hosted_dashboard.py --screenshot dashboard-acceptance.png
       - name: Upload browser screenshot
-        if: always() && github.event_name == 'workflow_dispatch'
+        if: always() && github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: m80-hosted-dashboard-evidence
