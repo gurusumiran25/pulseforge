@@ -16,6 +16,7 @@ except ImportError:
 
 from apps.dashboard.metrics import SEED_PATH, STAGES, filter_complete_sessions, load_events, summarize
 from apps.dashboard.public_feed import load_verified_public_feed
+from apps.dashboard.config import public_feed_enabled
 from apps.dashboard.payment_feed import load_verified_payment_feed
 from services.analytics.rfm import calculate_rfm
 from services.analytics.customer_value import calculate_observed_customer_value
@@ -28,20 +29,8 @@ st.title("PulseForge")
 if st_autorefresh is not None:
     st_autorefresh(interval=3_600_000, key="pulseforge-hourly-feed-refresh")
 st.caption("Product intelligence • synthetic events, not production data")
-# Streamlit Cloud stores app configuration in st.secrets; local deployments may
-# supply the same non-sensitive flag through the process environment.
-# Explicit environment settings take precedence when present.
-def public_feed_enabled():
-    configured = os.environ.get("PULSEFORGE_PUBLIC_FEED")
-    if configured is None:
-        try:
-            configured = st.secrets.get("PULSEFORGE_PUBLIC_FEED", "0")
-        except FileNotFoundError:
-            configured = "0"
-    return str(configured).strip().lower() in {"1", "true", "yes", "on"}
-
-
-remote_enabled = public_feed_enabled()
+# Streamlit Cloud secrets and environment precedence are regression-tested separately.
+remote_enabled = public_feed_enabled(st.secrets)
 source_path = Path(os.environ.get("PULSEFORGE_DASHBOARD_CSV", str(SEED_PATH))).expanduser()
 
 @st.cache_data(ttl=3600, show_spinner=False)
