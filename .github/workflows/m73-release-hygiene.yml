@@ -1,0 +1,34 @@
+name: M73 release hygiene
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/m73-release-hygiene.yml'
+      - 'scripts/check_release_hygiene.py'
+      - 'tests/release/test_m73_release_hygiene.py'
+      - '.gitignore'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/m73-release-hygiene.yml'
+      - 'scripts/check_release_hygiene.py'
+      - 'tests/release/test_m73_release_hygiene.py'
+      - '.gitignore'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tracked-artifact-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Reject tracked private credentials and generated databases
+        run: python scripts/check_release_hygiene.py
+      - name: Compile hygiene audit
+        run: python -m py_compile scripts/check_release_hygiene.py
