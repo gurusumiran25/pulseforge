@@ -22,3 +22,17 @@ def test_allows_public_synthetic_feed_and_source_files():
         ".env.example",
         "tests/release/test_m73_release_hygiene.py",
     ]) == []
+
+
+def test_public_directory_does_not_bypass_private_artifact_checks():
+    assert unsafe_paths([
+        "data/public/.env",
+        "data/public/private.key",
+        "data/public/customer.db",
+        "data/public/unreviewed.csv",
+    ]) == sorted([
+        "data/public/.env",
+        "data/public/private.key",
+        "data/public/customer.db",
+        "data/public/unreviewed.csv",
+    ])
