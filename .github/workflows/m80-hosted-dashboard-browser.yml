@@ -2,6 +2,12 @@ name: M80 hosted Streamlit browser acceptance
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/m80-hosted-dashboard-browser.yml'
+      - 'apps/dashboard/**'
+      - 'scripts/verify_hosted_dashboard.py'
   pull_request:
     paths:
       - '.github/workflows/m80-hosted-dashboard-browser.yml'
@@ -27,7 +33,7 @@ jobs:
       - name: Run acceptance regressions
         run: python -m pytest -q tests/release/test_m80_hosted_dashboard.py
       - name: Install Chromium
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name != 'pull_request'
         run: python -m playwright install --with-deps chromium
       - name: Inspect hosted dashboard with real Chromium
         if: github.event_name == 'workflow_dispatch'
