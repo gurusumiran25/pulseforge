@@ -54,3 +54,12 @@ Do not mark any checkbox complete solely because a source file exists. Verify ea
 - M77 adds a manual **release candidate verification** workflow: from Actions, select `M77 release candidate verification`, enter the exact 40-character candidate commit SHA, and retain the resulting run URL. It checks the exact checkout SHA, clean install, portfolio tests, tracked-artifact hygiene, local published feed and remote CDN. The run may fail if the feed is stale; do not waive freshness without recording why.
 - Before tagging, separately verify Redpanda workflow on the **same** candidate SHA, Streamlit browser acceptance with screenshot, at least two consecutive scheduled daily publisher runs and their independent monitors, and repository content/history security review.
 - **Do not create a release tag or check off the eleven gates merely because M77 workflow exists.** A successful run with a recorded candidate SHA and additional external evidence is required.
+
+## M82–M85 release hardening and hosted acceptance
+
+- M82 [PR #64](https://github.com/gurusumiran25/pulseforge/pull/64): Streamlit Cloud configuration regression tests and four-artifact architecture documentation merged with eight successful checks.
+- M83 [PR #65](https://github.com/gurusumiran25/pulseforge/pull/65): conservative tracked-file content scanner merged after all three checks passed. Its synthetic fixture is intentionally excluded; this does not establish historical secret hygiene.
+- M84 [PR #66](https://github.com/gurusumiran25/pulseforge/pull/66): bounded CDN retries for both verified feeds merged after nine successful checks; integrity failures still fail closed after retries.
+- M85 enables a real hosted Chromium browser acceptance run after relevant changes land on main, in addition to manual dispatch. The PR event still executes only offline regression tests. **A workflow definition is not live deployment evidence**: record the main-branch browser run URL and screenshot artifact, confirm all expected tables render, and keep the hosted acceptance gate open if it fails.
+- If hosted acceptance reports local CSV mode, configure `PULSEFORGE_PUBLIC_FEED = "1"` in Streamlit Community Cloud app secrets and restart/redeploy the app. Do not put credentials or other secrets into source control.
+- Do not tag v1.0.0 until M77 exact-SHA acceptance, M78/M79 scheduled evidence, real Redpanda integration and hosted browser checks are independently verified.
