@@ -16,6 +16,7 @@ except ImportError:
 
 from apps.dashboard.metrics import SEED_PATH, STAGES, filter_complete_sessions, load_events, summarize
 from apps.dashboard.public_feed import load_verified_public_feed
+from services.analytics.retention import calculate_retention
 
 
 st.set_page_config(page_title="PulseForge | Product Intelligence", page_icon="📊", layout="wide")
@@ -77,6 +78,14 @@ st.caption("Counts represent sessions containing each event, regardless of event
 
 st.subheader("Daily session-start cohorts (UTC)")
 st.dataframe(summary["daily_funnel"], use_container_width=True, hide_index=True)
+
+st.subheader("User activity retention by first observed UTC date")
+retention = calculate_retention(events)
+if retention["cohorts"]:
+    st.dataframe(retention["cohorts"], use_container_width=True, hide_index=True)
+else:
+    st.caption("No observed user activity in the selected period.")
+st.caption("D1/D7/D14/D30 count activity on exactly that UTC day after first observation. Recent cohorts have incomplete follow-up; zero does not necessarily mean churn. Date filtering limits the observation window, so these are not lifetime acquisition cohorts.")
 
 st.subheader("Daily event activity (UTC)")
 st.line_chart(summary["daily_activity"], x="date", y=["events", "active_users"])
