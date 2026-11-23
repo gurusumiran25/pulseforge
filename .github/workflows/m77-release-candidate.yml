@@ -1,0 +1,59 @@
+name: M77 release candidate verification
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_ref:
+        description: 'Exact 40-character commit SHA to verify'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    if: github.repository == 'gurusumiran25/pulseforge'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Require immutable commit SHA
+        env:
+          RELEASE_REF: ${{ inputs.release_ref }}
+        run: |
+          if [[ ! "$RELEASE_REF" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "::error::Provide the exact 40-character release candidate commit SHA"
+            exit 1
+          fi
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_ref }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install declared portfolio dependencies
+        run: |
+          python -m pip install -e '.[dev,portfolio]'
+          python -m pip check
+      - name: Verify tracked artifacts and release test suite
+        env:
+          PULSEFORGE_RUN_M43_DBT: '1'
+          PULSEFORGE_RUN_M45_DEMO: '1'
+          PULSEFORGE_RUN_M46_HEALTH: '1'
+          PULSEFORGE_RUN_M50_PERF: '1'
+        run: |
+          python scripts/check_release_hygiene.py
+          python -m pytest -q
+      - name: Verify published synthetic artifacts
+        run: python -m services.analytics.public_feed_health --directory data/public --max-age-hours 36 --require-payment-sidecar
+      - name: Verify independently hosted public CDN feed
+        run: python scripts/verify_remote_publication.py --max-age-hours 36 --attempts 4 --retry-seconds 20
+      - name: Record candidate SHA and workflow evidence
+        env:
+          RELEASE_REF: ${{ inputs.release_ref }}
+        run: |
+          echo "Candidate SHA: $(git rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
+          echo "Requested SHA: $RELEASE_REF" >> "$GITHUB_STEP_SUMMARY"
+          echo "Run URL: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >> "$GITHUB_STEP_SUMMARY"
+          test "$(git rev-parse HEAD)" = "$RELEASE_REF"
