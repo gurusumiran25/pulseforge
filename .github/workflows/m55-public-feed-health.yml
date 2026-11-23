@@ -9,6 +9,7 @@ on:
       - '.github/workflows/m55-public-feed-health.yml'
       - 'services/analytics/public_feed_health.py'
       - 'tests/integration/test_m55_public_feed_health.py'
+      - 'tests/integration/test_m67_payment_health.py'
   push:
     branches: [main]
     paths:
@@ -31,8 +32,8 @@ jobs:
       - name: Install package and test dependencies
         run: python -m pip install -e '.[dev]'
       - name: Validate publication freshness, integrity, and warehouse status
-        run: python -m services.analytics.public_feed_health --directory data/public --max-age-hours 36
+        run: python -m services.analytics.public_feed_health --directory data/public --max-age-hours 36 --require-payment-sidecar
       - name: Run health-gate regressions
-        run: python -m pytest -q tests/integration/test_m55_public_feed_health.py
+        run: python -m pytest -q tests/integration/test_m55_public_feed_health.py tests/integration/test_m67_payment_health.py
       - name: Lint health-gate modules
-        run: python -m ruff check services/analytics/public_feed_health.py tests/integration/test_m55_public_feed_health.py
+        run: python -m ruff check services/analytics/public_feed_health.py tests/integration/test_m55_public_feed_health.py tests/integration/test_m67_payment_health.py
