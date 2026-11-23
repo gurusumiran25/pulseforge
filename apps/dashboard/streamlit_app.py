@@ -18,6 +18,7 @@ from apps.dashboard.metrics import SEED_PATH, STAGES, filter_complete_sessions, 
 from apps.dashboard.public_feed import load_verified_public_feed
 from apps.dashboard.config import public_feed_enabled
 from apps.dashboard.payment_feed import load_verified_payment_feed
+from apps.dashboard.feed_retry import retry_verified_feed
 from services.analytics.rfm import calculate_rfm
 from services.analytics.customer_value import calculate_observed_customer_value
 from services.analytics.retention import calculate_retention
@@ -36,7 +37,7 @@ source_path = Path(os.environ.get("PULSEFORGE_DASHBOARD_CSV", str(SEED_PATH))).e
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_events(csv_path, remote):
     if remote:
-        return load_verified_public_feed()
+        return retry_verified_feed(load_verified_public_feed)
     return load_events(csv_path), None
 
 try:
@@ -102,7 +103,7 @@ if remote_enabled:
     try:
         @st.cache_data(ttl=3600, show_spinner=False)
         def get_payment_events(bronze_sha, generated_at_utc):
-            return load_verified_payment_feed({"sha256": bronze_sha, "generated_at_utc": generated_at_utc})
+            return retry_verified_feed(lambda: load_verified_payment_feed({"sha256": bronze_sha, "generated_at_utc": generated_at_utc}))
 
         payment_events = get_payment_events(feed_manifest["sha256"], feed_manifest["generated_at_utc"])
         selected_users = {event["user_id"] for event in events}
