@@ -41,6 +41,9 @@ def scan_tracked(root: Path) -> list[str]:
         if not name:
             continue
         rel = name.decode("utf-8", errors="replace")
+        # Synthetic test vectors intentionally contain credential-shaped strings.
+        if rel == "tests/release/test_m83_secret_content.py":
+            continue
         path = root / rel
         if not path.is_file() or path.is_symlink():
             continue
