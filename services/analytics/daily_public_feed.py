@@ -74,7 +74,19 @@ def build_public_feed(output_dir, *, as_of=None, days=14, sessions_per_day=40):
             paid_count = con.execute("SELECT coalesce(sum(completed_payment),0) FROM fct_session_funnel").fetchone()[0]
         if warehouse_count != metrics["events"] or paid_count != metrics["paid_sessions"]:
             raise ValueError("Warehouse/dashboard metrics mismatch")
-        # Payment sidecar must be exported from the same isolated SQLite snapshot.\n        payment_file = workspace / "latest_payments.csv"\n        payment_manifest = export_payment_sidecar(store.db_path, payment_file)\n        payment_rows = load_payment_sidecar(\n            payment_file, expected_sha256=payment_manifest["sha256"],\n            expected_rows=payment_manifest["rows"],\n        )\n        if sum(row["event_name"] == "payment_succeeded" for row in payment_rows) != sum(\n            event["event_name"] == "payment_succeeded" for event in load_events(bronze)\n        ):\n            raise ValueError("Payment sidecar/bronze payment count mismatch")\n        payment_manifest["bronze_sha256"] = verified["sha256"]\n        # Never overwrite the last healthy public dataset until the new build passes.
+        # Payment sidecar must be exported from the same isolated SQLite snapshot.
+        payment_file = workspace / "latest_payments.csv"
+        payment_manifest = export_payment_sidecar(store.db_path, payment_file)
+        payment_rows = load_payment_sidecar(
+            payment_file, expected_sha256=payment_manifest["sha256"],
+            expected_rows=payment_manifest["rows"],
+        )
+        if sum(row["event_name"] == "payment_succeeded" for row in payment_rows) != sum(
+            event["event_name"] == "payment_succeeded" for event in load_events(bronze)
+        ):
+            raise ValueError("Payment sidecar/bronze payment count mismatch")
+        payment_manifest["bronze_sha256"] = verified["sha256"]
+        # Never overwrite the last healthy public dataset until the new build passes.
         for src, name in ((bronze, "latest_bronze.csv"), (manifest, "latest_bronze.manifest.json"),
                           (payment_file, "latest_payments.csv")):
             staging = target / (name + ".new")
@@ -85,8 +97,10 @@ def build_public_feed(output_dir, *, as_of=None, days=14, sessions_per_day=40):
                   "paid_sessions": metrics["paid_sessions"],
                   "quality_checks": report["result"]["quality"]["checks"],
                   "status": "passed"}
-        status["payment_sidecar"] = payment_manifest\n        status_temp = target / "status.json.new"
-        status_temp.write_text(json.dumps(status, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+        status["payment_sidecar"] = payment_manifest
+        status_temp = target / "status.json.new"
+        status_temp.write_text(json.dumps(status, sort_keys=True, indent=2) + "
+", encoding="utf-8")
         os.replace(status_temp, target / "status.json")
         return status
 
