@@ -1,13 +1,13 @@
 {
-  "as_of_utc": "2026-11-23",
+  "as_of_utc": "2026-11-24",
   "days": 14,
-  "events": 2669,
-  "paid_sessions": 241,
+  "events": 2650,
+  "paid_sessions": 238,
   "payment_sidecar": {
-    "bronze_sha256": "d5a6aab39e910f2dd3b7226a823cc6d73844d85dd0230e82f34f04c7c3b23915",
-    "rows": 241,
+    "bronze_sha256": "61b2532036d7ee1b0f62efc952ed28bab72284d415ce9dabbc70b08ab3dddaee",
+    "rows": 238,
     "schema_version": 1,
-    "sha256": "74da56a0dc526d26f714a9288b86b4eb1f188bd0b1dadee46dc6fe57dc6566c7"
+    "sha256": "b2512763c38389e7da2f61bcc56488c7723ac28cf839df89a02507c602a89515"
   },
   "quality_checks": 8,
   "sessions": 560,
