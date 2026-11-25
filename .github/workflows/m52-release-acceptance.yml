@@ -9,6 +9,7 @@ on:
       - 'warehouse/**'
       - 'tests/**'
       - 'pyproject.toml'
+      - 'docs/RELEASE_CHECKLIST.md'
   push:
     branches: [main]
     paths:
@@ -18,6 +19,7 @@ on:
       - 'warehouse/**'
       - 'tests/**'
       - 'pyproject.toml'
+      - 'docs/RELEASE_CHECKLIST.md'
   workflow_dispatch:
 
 jobs:
