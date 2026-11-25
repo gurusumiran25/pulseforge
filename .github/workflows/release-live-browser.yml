@@ -1,0 +1,35 @@
+name: Release hosted dashboard evidence
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/release-live-browser.yml'
+      - 'docs/RELEASE_CHECKLIST.md'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/release-live-browser.yml'
+      - 'docs/RELEASE_CHECKLIST.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  hosted-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install playwright==1.51.0
+      - run: python -m playwright install --with-deps chromium
+      - name: Verify actual public dashboard
+        run: python scripts/verify_hosted_dashboard.py --screenshot dashboard-acceptance.png
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hosted-dashboard-evidence
+          path: dashboard-acceptance.png
+          if-no-files-found: warn
