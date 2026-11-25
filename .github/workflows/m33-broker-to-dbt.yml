@@ -11,6 +11,8 @@ on:
       - 'services/storage/**'
       - 'warehouse/dbt/**'
       - 'warehouse/sql/**'
+      - 'docs/RELEASE_CHECKLIST.md'
+      - 'pyproject.toml'
   pull_request:
     paths:
       - 'tests/integration/test_m33_real_broker_to_dbt.py'
@@ -22,6 +24,8 @@ on:
       - 'services/storage/**'
       - 'warehouse/dbt/**'
       - 'warehouse/sql/**'
+      - 'docs/RELEASE_CHECKLIST.md'
+      - 'pyproject.toml'
 jobs:
   broker-warehouse:
     runs-on: ubuntu-latest
