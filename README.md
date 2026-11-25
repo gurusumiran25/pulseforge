@@ -8,6 +8,17 @@ PulseForge is an actively developed Python portfolio project exploring synthetic
 
 **Status:** The repository includes a reproducible synthetic end-to-end portfolio demonstration and isolated broker-backed CI, but it is **not a production-deployed analytics platform**. Live broker integration, continuously deployed monitoring, and automatic production self-healing are not covered by the standard CI workflow.
 
+## Explore the portfolio
+
+- [Public synthetic analytics dashboard](https://pulseforge-analytics.streamlit.app/) — free hosting may require a wake-up; independent hosted acceptance remains pending.
+- [Architecture and engineering boundaries](docs/architecture.md)
+- [Reproducible demo and interview talking points](docs/PORTFOLIO_DEMO.md)
+- [Release acceptance checklist](docs/RELEASE_CHECKLIST.md)
+
+### Business use case
+
+A synthetic e-commerce team needs to understand conversion, payment outcomes and customer purchase patterns while detecting unreliable source data. PulseForge demonstrates event validation, session funnels, currency-separated payment analytics, RFM segmentation and integrity-checked publication. All events and customer identifiers are synthetic; metrics are demonstration results, not commercial outcomes.
+
 ## Engineering goals
 
 - Model versioned, validated e-commerce events.
@@ -27,6 +38,8 @@ PulseForge is an actively developed Python portfolio project exploring synthetic
 | Streaming | Redpanda-compatible Kafka, `confluent-kafka` |
 | Persistence | SQLite |
 | Analytics | Python, SQL |
+| Warehouse | dbt, DuckDB |
+| Dashboard | Streamlit |
 | Tests and tooling | pytest, HTTPX, Ruff |
 | Local broker configuration | Docker Compose |
 | CI | GitHub Actions, Ubuntu / Python 3.12 |
@@ -96,6 +109,22 @@ Preview-only self-healing decisions
 ```
 
 These are related subsystems, **not** a claim of one continuously deployed production pipeline. See [architecture details](docs/architecture.md).
+
+### Scheduled public analytics path
+
+```text
+Daily GitHub Actions publisher
+        |
+Synthetic journeys -> SQLite -> verified Bronze CSV
+        |
+dbt DuckDB Silver / Gold -> semantic quality gate
+        |
+Atomic Git commit of four public feed artifacts
+        |
+Streamlit verifies feed integrity -> product analytics
+```
+
+An independent feed-health workflow checks freshness and integrity. The hosted dashboard reads verified CSV rather than querying DuckDB directly. This batch path is separate from the live broker integration.
 
 ## Repository map
 
@@ -175,7 +204,7 @@ python -m uvicorn services.ingestion.main:app --host 127.0.0.1 --port 8000
 | --- | --- | --- |
 | GET | `/health` | API process health, **not** broker availability |
 | POST | `/v1/events` | Validate and publish a single event |
-| POST | `/v1/events/batch` | Validate and publish 1â€“1000 events; partial publication possible |
+| POST | `/v1/events/batch` | Validate and publish 1–1000 events; partial publication possible |
 
 A Redpanda service definition exists in `docker-compose.yml`, but starting containers, creating topics, and running live Kafka tests are separate, explicitly controlled operations.
 
@@ -185,7 +214,7 @@ A Redpanda service definition exists in `docker-compose.yml`, but starting conta
 | --- | --- | --- |
 | GET | `/monitoring/health` | Monitoring database availability/integrity, not full platform health |
 | GET | `/monitoring/latest` | Latest persisted monitoring snapshot |
-| GET | `/monitoring/history?limit=10` | Recent snapshot summaries (limit 1â€“100) |
+| GET | `/monitoring/history?limit=10` | Recent snapshot summaries (limit 1–100) |
 
 See [monitoring documentation](services/monitoring/README.md) for prerequisites and limitations.
 
