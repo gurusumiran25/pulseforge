@@ -63,3 +63,13 @@ Do not mark any checkbox complete solely because a source file exists. Verify ea
 - M85 enables a real hosted Chromium browser acceptance run after relevant changes land on main, in addition to manual dispatch. The PR event still executes only offline regression tests. **A workflow definition is not live deployment evidence**: record the main-branch browser run URL and screenshot artifact, confirm all expected tables render, and keep the hosted acceptance gate open if it fails.
 - If hosted acceptance reports local CSV mode, configure `PULSEFORGE_PUBLIC_FEED = "1"` in Streamlit Community Cloud app secrets and restart/redeploy the app. Do not put credentials or other secrets into source control.
 - Do not tag v1.0.0 until M77 exact-SHA acceptance, M78/M79 scheduled evidence, real Redpanda integration and hosted browser checks are independently verified.
+
+## Latest verified pre-release evidence (2026-11-25 UTC)
+
+- [M52 portfolio acceptance](https://github.com/gurusumiran25/pulseforge/actions/runs/45691522650): clean install, pip check, enabled portfolio integration suite and lint passed on PR #76.
+- [Real broker-to-dbt integration](https://github.com/gurusumiran25/pulseforge/actions/runs/45691975819): actual Redpanda-to-dbt test passed on PR #77.
+- [Historical credential scan](https://github.com/gurusumiran25/pulseforge/actions/runs/45692657525): Gitleaks scanned 335 reachable commits with no detected leaks on PR #78.
+- [Real hosted Chromium acceptance](https://github.com/gurusumiran25/pulseforge/actions/runs/45694260162): all five required text checks passed with no forbidden error markers on PR #79. [Screenshot artifact](https://github.com/gurusumiran25/pulseforge/actions/runs/45694260162/artifacts/15061060277). This supersedes the earlier PR-only hosted acceptance limitation, but is not exact final main SHA evidence.
+- The November 25 public status reports 2,634 events, 560 sessions, 240 paid sessions and eight quality checks. Consecutive scheduled publisher and monitor run evidence remains to be reconciled.
+
+The candidate review deliberately triggers M52, M33, history scanning and real hosted browser acceptance. Keep final SHA and tag gates open until independently verified; do not interpret this evidence as production certification.
