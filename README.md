@@ -10,6 +10,8 @@ PulseForge is an actively developed Python portfolio project exploring synthetic
 
 ## Explore the portfolio
 
+- [Professional portfolio case study](docs/PORTFOLIO_CASE_STUDY.md) — business objectives, architecture, synthetic metrics and engineering tradeoffs.
+
 - [Public synthetic analytics dashboard](https://pulseforge-analytics.streamlit.app/) — free hosting may require a wake-up; independent hosted acceptance remains pending.
 - [Architecture and engineering boundaries](docs/architecture.md)
 - [Reproducible demo and interview talking points](docs/PORTFOLIO_DEMO.md)
