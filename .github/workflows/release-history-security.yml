@@ -1,0 +1,26 @@
+name: Release history credential scan
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/release-history-security.yml'
+      - 'docs/RELEASE_CHECKLIST.md'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/release-history-security.yml'
+      - 'docs/RELEASE_CHECKLIST.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  history-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Scan reachable Git history with redacted output
+        run: |
+          docker run --rm -v "$PWD:/repo:ro" zricethezav/gitleaks:v8.24.3 git /repo --log-opts="--all" --redact=100 --no-banner
