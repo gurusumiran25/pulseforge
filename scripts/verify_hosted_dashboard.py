@@ -32,16 +32,17 @@ def check_text(text):
 def wait_for_dashboard(page, timeout_seconds=240):
     """Wake a sleeping public demo once and wait for actual dashboard content."""
     deadline = time.monotonic() + timeout_seconds
-    wake = page.get_by_text("Yes, get this app back up!", exact=True)
-    heading = page.get_by_text("Synthetic customer purchase analytics", exact=True)
     clicked = False
     while time.monotonic() < deadline:
-        if heading.is_visible():
-            return
-        if not clicked and wake.is_visible():
-            wake.click(timeout=10000)
-            clicked = True
-            print("Requested Streamlit demo wake-up", flush=True)
+        for frame in page.frames:
+            heading = frame.get_by_text("Synthetic customer purchase analytics", exact=True)
+            if heading.is_visible():
+                return frame
+            wake = frame.get_by_text("Yes, get this app back up!", exact=True)
+            if not clicked and wake.is_visible():
+                wake.click(timeout=10000)
+                clicked = True
+                print("Requested Streamlit demo wake-up", flush=True)
         page.wait_for_timeout(1000)
     raise TimeoutError("Hosted dashboard did not render within startup deadline")
 
@@ -57,10 +58,10 @@ def main():
         page = browser.new_page(viewport={"width": 1440, "height": 1000})
         try:
             page.goto(APP_URL, wait_until="domcontentloaded", timeout=90000)
-            wait_for_dashboard(page)
-            page.get_by_text("Observed payment value (per currency)", exact=True).wait_for(timeout=45000)
+            app_frame = wait_for_dashboard(page)
+            app_frame.get_by_text("Observed payment value (per currency)", exact=True).wait_for(timeout=45000)
             page.screenshot(path=args.screenshot, full_page=True)
-            outcome = check_text(page.locator("body").inner_text())
+            outcome = check_text(app_frame.locator("body").inner_text())
             outcome.update({
                 "url": page.url,
                 "checked_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -76,7 +77,7 @@ def main():
             except Exception as screenshot_error:
                 print(f"Diagnostic screenshot unavailable: {type(screenshot_error).__name__}", flush=True)
             try:
-                body = page.locator("body").inner_text(timeout=5000)
+                body = "\n".join(frame.locator("body").inner_text(timeout=5000) for frame in page.frames)
                 print(json.dumps({
                     "url": page.url,
                     "failure_type": type(exc).__name__,
