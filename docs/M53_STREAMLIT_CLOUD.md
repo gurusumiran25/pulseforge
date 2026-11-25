@@ -32,6 +32,10 @@ Record the observed timestamp, app URL, screenshot or browser-test output, and t
 
 The public publisher now also validates payment-sidecar integrity and Bronze linkage before committing. The scheduled independent health monitor requires the payment sidecar. GitHub Actions has a scoped push trigger for publisher implementation changes, but a successful initial publication does not prove two consecutive scheduled refreshes.
 
+## Free hosting cold starts
+
+Streamlit Community Cloud may put the public demo to sleep after inactivity. If the sleep screen appears, select **Yes, get this app back up!** and allow startup to finish. The hosted Chromium acceptance script requests this explicit wake-up at most once and allows a bounded 240-second startup window. It still requires all dashboard acceptance text and rejects feed errors or local-seed fallback. A blank page or startup timeout remains a failed acceptance check; a successful offline regression is not proof of hosted availability. Free hosting does not imply an uptime SLA.
+
 ## Monitoring and recovery
 
 - The workflow is the daily operational monitor: a failing generation, dbt, integrity or publish step produces a red GitHub Actions run. GitHub Actions notifications can be enabled for failures.
