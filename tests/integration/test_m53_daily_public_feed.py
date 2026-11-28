@@ -90,6 +90,19 @@ def test_daily_publication_quality_and_dates(tmp_path):
     if output:
         with open(output, "w", encoding="utf-8") as handle:
             json.dump(evidence, handle, indent=2, default=str)
+    bundle = os.getenv("PULSEFORGE_ACCEPTANCE_BUNDLE")
+    if bundle:
+        import shutil
+        from pathlib import Path
+
+        from services.analytics.bi_pbip import write_package
+
+        destination = Path(bundle)
+        destination.mkdir(parents=True, exist_ok=False)
+        shutil.copytree(bi_root, destination / "snapshot")
+        write_package(destination / "PulseForge", snapshot_id=pointer["snapshot"])
+        (destination / "expected-kpis.json").write_text(
+            json.dumps(evidence, indent=2, default=str), encoding="utf-8")
     assert validate_report(load_report()) == 24
     assert validate_layout(load_layout(), load_report()) == 7
     # A corrupted immutable file must prevent refresh, without changing the pointer.
