@@ -44,3 +44,22 @@ def test_report_bindings():
                     assert "column " + col["Property"] in files[
                         "PulseForge.SemanticModel/definition/tables/" + table + ".tmdl"
                     ]
+
+
+def test_native_report_features():
+    files = package_sources()
+    prefix = "PulseForge.Report/definition/"
+    report = json.loads(files[prefix + "report.json"])
+    theme = report["themeCollection"]["customTheme"]["name"]
+    assert files["PulseForge.Report/StaticResources/RegisteredResources/" + theme] == files[theme]
+    for page in ("journey", "payments"):
+        doc = json.loads(files[prefix + "pages/" + page + "/page.json"])
+        assert doc["pageBinding"]["type"] == "Drillthrough"
+        assert doc["pageBinding"]["parameters"][0]["boundFilter"] == doc["filterConfig"]["filters"][0]["name"]
+    visuals = [json.loads(v)["visual"] for k, v in files.items() if k.endswith("/visual.json")]
+    currency = [v for v in visuals if v["visualType"] == "slicer" and "objects" in v]
+    assert len(currency) == 3
+    assert all(v["objects"]["selection"][0]["properties"]["singleSelect"]["expr"]["Literal"]["Value"] == "true" for v in currency)
+    assert sum(v["visualType"] == "funnel" for v in visuals) == 2
+    growth = [v for v in visuals if "calloutValue" in v.get("objects", {})]
+    assert len(growth) == 1
