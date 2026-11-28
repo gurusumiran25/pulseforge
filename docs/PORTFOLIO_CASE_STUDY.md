@@ -46,7 +46,7 @@ These numbers demonstrate the analytics pipeline, not actual business uplift, pr
 
 ## Demonstration and validation
 
-Use the [README](../README.md) to install the portfolio extras in an isolated Python environment. The one-command demo exercises SQLite, Bronze, real dbt, quality checks and dashboard metric parity. Dedicated CI separately exercises real broker integration. The [public dashboard](https://pulseforge-analytics.streamlit.app/) is available as a demo URL; independent hosted browser acceptance and exact release-candidate verification remain pending. See [release checklist](RELEASE_CHECKLIST.md).
+Use the [README](../README.md) to install the portfolio extras in an isolated Python environment. The one-command demo exercises SQLite, Bronze, real dbt, quality checks and dashboard metric parity. Dedicated CI separately exercises real broker integration. The [public dashboard](https://pulseforge-analytics.streamlit.app/) is available as a demo URL; independent [hosted Chromium browser acceptance](https://github.com/gurusumiran25/pulseforge/actions/runs/46119491797) and [exact-SHA release candidate verification](https://github.com/gurusumiran25/pulseforge/actions/runs/46119216023) both passed on 2026-11-28 for commit `920e3f284b8642301bbf13ce5184a79101b51f95`. Official release publication remains pending. See [release checklist](RELEASE_CHECKLIST.md).
 
 ## Interview discussion
 
