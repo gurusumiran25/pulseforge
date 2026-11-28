@@ -29,7 +29,7 @@ def report_sources(root=ROOT):
     def put(path, obj):
         files[path] = json.dumps(obj, indent=2) + "\n"
     put("version.json", {"$schema": SCHEMA + "versionMetadata/1.0.0/schema.json", "version": "2.0.0"})
-    put("report.json", {"$schema": SCHEMA + "report/2.0.0/schema.json", "themeCollection": {"baseTheme": {"name": "CY24SU06", "reportVersionAtImport": {"visual": "1.8.0", "report": "2.0.0", "page": "1.3.0"}, "type": "SharedResources"}}})
+    put("report.json", {"$schema": SCHEMA + "report/2.0.0/schema.json", "themeCollection": {"baseTheme": {"name": "CY24SU06", "reportVersionAtImport": "2.0.0", "type": "SharedResources"}}})
     ids = [p["id"] for p in spec["pages"]]
     put("pages/pages.json", {"$schema": SCHEMA + "pagesMetadata/1.0.0/schema.json", "pageOrder": ids, "activePageName": ids[0]})
     for page in spec["pages"]:
