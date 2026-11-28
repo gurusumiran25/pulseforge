@@ -22,6 +22,7 @@ def package_sources(root=ROOT, snapshot_id="UNCONFIGURED"):
     sources = generate_model_sources(root, snapshot_id)
     files.update({model + "definition/" + path: data for path, data in sources.items()})
     files.update({report + 'definition/' + path: data for path, data in report_sources(root).items()})
+    files["PulseForge.theme.json"] = (Path(root) / "powerbi/report/PulseForge.theme.json").read_text(encoding="utf-8")
     return files
 
 
