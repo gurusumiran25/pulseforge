@@ -40,7 +40,7 @@ def report_sources(root=ROOT):
     def put(path, obj):
         files[path] = json.dumps(obj, indent=2) + "\n"
     put("version.json", {"$schema": SCHEMA + "versionMetadata/1.0.0/schema.json", "version": "2.0.0"})
-    put("report.json", {"$schema": SCHEMA + "report/2.0.0/schema.json", "themeCollection": {"baseTheme": {"name": "CY24SU06", "reportVersionAtImport": "2.0.0", "type": "SharedResources"}}})
+    put("report.json", {"$schema": SCHEMA + "report/2.0.0/schema.json", "themeCollection": {"baseTheme": {"name": "CY24SU06", "reportVersionAtImport": "2.0.0", "type": "SharedResources"}, "customTheme": {"name": "PulseForge.theme.json", "reportVersionAtImport": "2.0.0", "type": "RegisteredResources"}}, "resourcePackages": [{"name": "RegisteredResources", "type": "RegisteredResources", "items": [{"name": "PulseForge.theme.json", "path": "PulseForge.theme.json", "type": "CustomTheme"}]}]})
     titles = {
         "executive": ["Executive KPIs", "Sessions over time", "Observed funnel stages", "Net revenue over time"],
         "journey": ["Journey KPIs", "Observed funnel stages", "Purchase conversion trend", "Events by type"],
