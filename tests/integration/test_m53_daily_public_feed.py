@@ -66,10 +66,11 @@ def test_daily_publication_quality_and_dates(tmp_path):
 
     # M92: verify the same pinned snapshot through all reference gates.
     from datetime import datetime, timezone
-    from services.analytics.bi_refresh import verify_refresh
+
     from services.analytics.bi_kpis import reference_kpis
-    from services.analytics.bi_report import load_report, validate_report
     from services.analytics.bi_navigation import load_layout, validate_layout
+    from services.analytics.bi_refresh import verify_refresh
+    from services.analytics.bi_report import load_report, validate_report
 
     verified = verify_refresh(bi_root, now=datetime(2026, 11, 23, tzinfo=timezone.utc))
     assert verified["snapshot"] == pointer["snapshot"]
