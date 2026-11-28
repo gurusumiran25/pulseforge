@@ -45,3 +45,35 @@ def generate_sources(root=ROOT):
                               "\ttoColumn: " + dim + "." + key, ""])
     sources["relationships.tmdl"] = "\n".join(relationships)
     return sources
+
+
+def measure_sources(root=ROOT):
+    root = Path(root)
+    measures = {}
+    for path in ("docs/M88_POWERBI_DAX.md", "powerbi/measures/CUSTOMER_WINDOW.md", "powerbi/measures/DATE_COHORT.md"):
+        for block in re.findall(r"```dax\n(.*?)\n```", (root / path).read_text(), re.S):
+            for match in re.finditer(r"^([A-Za-z][A-Za-z0-9 ]*) =([^\n]*(?:\n[ \t]+[^\n]*)*)", block, re.M):
+                name, expression = match.group(1).strip(), match.group(2).strip()
+                if name in measures or not expression:
+                    raise ValueError("Invalid measure: " + name)
+                measures[name] = expression
+    return measures
+
+
+def generate_model_sources(root=ROOT, snapshot_id="UNCONFIGURED"):
+    root = Path(root)
+    if snapshot_id != "UNCONFIGURED" and not re.fullmatch(r"[0-9a-f]{64}", snapshot_id):
+        raise ValueError("Invalid snapshot ID")
+    sources = generate_sources(root)
+    lines = ["table FactEvent"]
+    for name, expression in measure_sources(root).items():
+        lines.extend(["", "\tmeasure '" + name + "' =", *["\t\t" + line for line in expression.splitlines()]])
+        if name.endswith("Rate") or name in ("Purchase Conversion", "Session Growth", "Observed Cohort Retention"):
+            lines.append("\t\tformatString: 0.00%")
+    sources["tables/FactEvent.tmdl"] = "\n".join(lines) + "\n" + sources["tables/FactEvent.tmdl"].split("\n", 1)[1]
+    fn = (root / "powerbi/queries/LoadSnapshotTable.pq").read_text()
+    sources["expressions.tmdl"] = 'expression SnapshotId = "' + snapshot_id + '" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]\n\nexpression LoadSnapshotTable =\n' + "\n".join("\t" + line for line in fn.splitlines()) + "\n"
+    calendar = re.search(r"```powerquery\n(.*?)\n```", (root / "powerbi/measures/DATE_COHORT.md").read_text(), re.S).group(1)
+    sources["tables/DimDate.tmdl"] = sources["tables/DimDate.tmdl"].split("\t\tsource =", 1)[0] + "\t\tsource =\n" + "\n".join("\t\t\t" + line for line in calendar.splitlines()) + "\n"
+    sources["tables/CohortDay.tmdl"] = "table CohortDay\n\n\tcolumn Value\n\t\tdataType: int64\n\t\tsourceColumn: [Value]\n\t\tsummarizeBy: none\n\n\tpartition CohortDay = calculated\n\t\tmode: import\n\t\tsource = GENERATESERIES(1,7,1)\n"
+    return sources
