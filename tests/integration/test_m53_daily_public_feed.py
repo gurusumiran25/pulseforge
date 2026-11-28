@@ -41,7 +41,7 @@ def test_daily_publication_quality_and_dates(tmp_path):
     manifest_bytes = (snapshot / "manifest.json").read_bytes()
     assert hashlib.sha256(manifest_bytes).hexdigest() == pointer["snapshot"]
     manifest = json.loads(manifest_bytes)
-    assert len(manifest["files"]) == 7
+    assert len(manifest["files"]) == 9
     for name, metadata in manifest["files"].items():
         raw = (snapshot / name).read_bytes()
         assert hashlib.sha256(raw).hexdigest() == metadata["sha256"]
@@ -52,3 +52,13 @@ def test_daily_publication_quality_and_dates(tmp_path):
     assert sum(int(row["completed_payment"]) for row in sessions) == result["paid_sessions"]
     with (snapshot / "FactEvent.csv").open(newline="") as handle:
         assert len(list(csv.DictReader(handle))) == result["events"]
+
+    with (snapshot / "FactProductView.csv").open(newline="") as handle:
+        views = list(csv.DictReader(handle))
+    with (snapshot / "FactEvent.csv").open(newline="") as handle:
+        expected = {r["event_id"] for r in csv.DictReader(handle) if r["event_name"] == "product_viewed"}
+    assert {r["event_id"] for r in views} == expected
+    assert len(views) == len(expected)
+    with (snapshot / "DimProduct.csv").open(newline="") as handle:
+        products = {r["product_id"] for r in csv.DictReader(handle)}
+    assert all(r["product_id"] in products for r in views)
