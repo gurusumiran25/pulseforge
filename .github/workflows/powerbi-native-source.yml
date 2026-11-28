@@ -23,3 +23,12 @@ jobs:
           name: pulseforge-pbip-candidate
           path: build/PulseForge/
           if-no-files-found: error
+  microsoft-schema-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install jsonschema==4.23.0
+      - run: python -m services.analytics.bi_pbir_validate
