@@ -20,7 +20,8 @@ def test_rejects_invalid_parameters(tmp_path):
 def test_daily_publication_quality_and_dates(tmp_path):
     from datetime import date
     root = tmp_path / "public"
-    result = build_public_feed(root, as_of=date(2026, 11, 22), days=3, sessions_per_day=4)
+    bi_root = tmp_path / "bi"
+    result = build_public_feed(root, as_of=date(2026, 11, 22), days=3, sessions_per_day=4, bi_output_dir=bi_root)
     assert result["status"] == "passed"
     assert result["sessions"] == 12
     csv_path = root / "latest_bronze.csv"
@@ -32,3 +33,22 @@ def test_daily_publication_quality_and_dates(tmp_path):
         "2026-11-20", "2026-11-21", "2026-11-22"
     ]
     assert json.loads((root / "status.json").read_text())["events"] == result["events"]
+
+    import csv
+    import hashlib
+    pointer = json.loads((bi_root / "current.json").read_text())
+    snapshot = bi_root / pointer["snapshot"]
+    manifest_bytes = (snapshot / "manifest.json").read_bytes()
+    assert hashlib.sha256(manifest_bytes).hexdigest() == pointer["snapshot"]
+    manifest = json.loads(manifest_bytes)
+    assert len(manifest["files"]) == 7
+    for name, metadata in manifest["files"].items():
+        raw = (snapshot / name).read_bytes()
+        assert hashlib.sha256(raw).hexdigest() == metadata["sha256"]
+        assert len(raw) == metadata["bytes"]
+    with (snapshot / "FactSession.csv").open(newline="") as handle:
+        sessions = list(csv.DictReader(handle))
+    assert len(sessions) == result["sessions"]
+    assert sum(int(row["completed_payment"]) for row in sessions) == result["paid_sessions"]
+    with (snapshot / "FactEvent.csv").open(newline="") as handle:
+        assert len(list(csv.DictReader(handle))) == result["events"]
