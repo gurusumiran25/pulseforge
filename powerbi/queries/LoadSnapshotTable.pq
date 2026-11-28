@@ -7,7 +7,7 @@ let
     Id = SnapshotId,
     ValidId = Text.Length(Id) = 64 and Text.Select(Id, {"0".."9","a".."f"}) = Id,
     Checked = if ValidId and List.Contains(Allowed,file) then file else error "Invalid snapshot or table",
-    Raw = Web.Contents("https://raw.githubusercontent.com", [RelativePath="gurusumiran25/pulseforge/main/data/bi/" & Id & "/" & Checked]),
+    Raw = if SnapshotRoot <> "" then File.Contents(SnapshotRoot & "/" & Id & "/" & Checked) else Web.Contents("https://raw.githubusercontent.com", [RelativePath="gurusumiran25/pulseforge/main/data/bi/" & Id & "/" & Checked]),
     Parsed = Csv.Document(Raw,[Delimiter=",",Encoding=65001,QuoteStyle=QuoteStyle.Csv]),
     Headers = Table.PromoteHeaders(Parsed,[PromoteAllScalars=true]),
     Expected = List.Transform(columnTypes, each _{0}),
