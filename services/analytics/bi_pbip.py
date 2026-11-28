@@ -2,6 +2,7 @@
 import json
 from pathlib import Path
 
+from services.analytics.bi_pbir import report_sources
 from services.analytics.bi_tmdl import ROOT, generate_model_sources
 
 
@@ -20,6 +21,7 @@ def package_sources(root=ROOT, snapshot_id="UNCONFIGURED"):
     }
     sources = generate_model_sources(root, snapshot_id)
     files.update({model + "definition/" + path: data for path, data in sources.items()})
+    files.update({report + 'definition/' + path: data for path, data in report_sources(root).items()})
     return files
 
 
