@@ -77,3 +77,20 @@ def generate_model_sources(root=ROOT, snapshot_id="UNCONFIGURED"):
     sources["tables/DimDate.tmdl"] = sources["tables/DimDate.tmdl"].split("\t\tsource =", 1)[0] + "\t\tsource =\n" + "\n".join("\t\t\t" + line for line in calendar.splitlines()) + "\n"
     sources["tables/CohortDay.tmdl"] = "table CohortDay\n\n\tcolumn Value\n\t\tdataType: int64\n\t\tsourceColumn: [Value]\n\t\tsummarizeBy: none\n\n\tpartition CohortDay = calculated\n\t\tmode: import\n\t\tsource = GENERATESERIES(1,7,1)\n"
     return sources
+
+
+def write_semantic_model(output, root=ROOT, snapshot_id="UNCONFIGURED"):
+    """Write a candidate semantic model folder, without claiming native validation."""
+    output = Path(output)
+    sources = generate_model_sources(root, snapshot_id)
+    names = sorted(Path(name).stem for name in sources if name.startswith("tables/"))
+    sources["database.tmdl"] = "database\n\tcompatibilityLevel: 1600\n"
+    sources["model.tmdl"] = "model Model\n\tculture: en-US\n\tdefaultPowerBIDataSourceVersion: powerBI_V3\n\tsourceQueryCulture: en-US\n\n" + "\n".join("ref table " + name for name in names) + "\n\nref expression SnapshotId\nref expression LoadSnapshotTable\n"
+    if output.exists():
+        raise FileExistsError(output)
+    for name, content in sources.items():
+        target = output / "definition" / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(content, encoding="utf-8")
+    (output / "definition.pbism").write_text(json.dumps({"version": "4.0", "settings": {}}, indent=2) + "\n", encoding="utf-8")
+    return output
