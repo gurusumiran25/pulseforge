@@ -25,7 +25,8 @@ def test_report_bindings():
     pages = json.loads(files[prefix + "pages/pages.json"])["pageOrder"]
     assert len(pages) == len(set(pages)) == 7
     visuals = [json.loads(v) for k, v in files.items() if k.endswith("/visual.json")]
-    assert len(visuals) == 34
+    assert len(visuals) == 41
+    assert sum(v["visual"]["visualType"] == "pageNavigator" for v in visuals) == 7
     assert sum(v["visual"]["visualType"] == "slicer" for v in visuals) == 10
     measures = measure_sources()
     for v in visuals:
