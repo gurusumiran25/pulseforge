@@ -61,8 +61,20 @@ def report_sources(root=ROOT):
     for page in spec["pages"]:
         pid = page["id"]
         prefix = "pages/" + pid + "/"
-        put(prefix + "page.json", {"$schema": SCHEMA + "page/2.0.0/schema.json", "name": pid,
-            "displayName": page["title"], "displayOption": "FitToPage", **spec["canvas"]})
+        page_document = {"$schema": SCHEMA + "page/2.0.0/schema.json", "name": pid,
+            "displayName": page["title"], "displayOption": "FitToPage", **spec["canvas"]}
+        if pid in {item["target"] for item in layout["drillthrough"]}:
+            page_document["pageBinding"] = {
+                "name": pid + "Drillthrough",
+                "type": "Drillthrough",
+                "parameters": [{"name": "Date", "boundFilter": "DrillthroughDate"}]
+            }
+            page_document["filterConfig"] = {"filters": [{
+                "name": "DrillthroughDate",
+                "field": projection("DimDate", "date_utc")["field"],
+                "type": "Categorical"
+            }]}
+        put(prefix + "page.json", page_document)
         for pos in positions[pid]["visuals"]:
             i = pos["index"]
             v = page["visuals"][i]
