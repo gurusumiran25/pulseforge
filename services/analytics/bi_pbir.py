@@ -12,12 +12,23 @@ def projection(table, name, measure=False):
             "queryRef": table + "." + name, "nativeQueryRef": name}
 
 
-def visual_source(name, kind, position, roles):
+def literal(value):
+    return {"expr": {"Literal": {"Value": value}}}
+
+
+def visual_source(name, kind, position, roles, title):
     return {"$schema": SCHEMA + "visualContainer/2.0.0/schema.json",
             "name": name, "position": position,
             "visual": {"visualType": kind, "query": {"queryState": {
                 role: {"projections": values} for role, values in roles.items() if values
-            }}, "drillFilterOtherVisuals": True}}
+            }}, "drillFilterOtherVisuals": True,
+            "visualContainerObjects": {
+                "title": [{"properties": {"show": literal("true"),
+                    "text": literal("'" + title.replace("'", "''") + "'"),
+                    "fontSize": literal("12D")}}],
+                "background": [{"properties": {"show": literal("true"),
+                    "transparency": literal("0D")}}]
+            }}}
 
 
 def report_sources(root=ROOT):
@@ -30,6 +41,15 @@ def report_sources(root=ROOT):
         files[path] = json.dumps(obj, indent=2) + "\n"
     put("version.json", {"$schema": SCHEMA + "versionMetadata/1.0.0/schema.json", "version": "2.0.0"})
     put("report.json", {"$schema": SCHEMA + "report/2.0.0/schema.json", "themeCollection": {"baseTheme": {"name": "CY24SU06", "reportVersionAtImport": "2.0.0", "type": "SharedResources"}}})
+    titles = {
+        "executive": ["Executive KPIs", "Sessions over time", "Observed funnel stages", "Net revenue over time"],
+        "journey": ["Journey KPIs", "Observed funnel stages", "Purchase conversion trend", "Events by type"],
+        "payments": ["Payment KPIs", "Payment outcomes", "Revenue and refunds"],
+        "customers": ["Customer KPIs", "Observed cohort retention", "Customer RFM", "Daily active customers"],
+        "products": ["Product KPIs", "Views by category", "Views by product", "Product views over time"],
+        "quality": ["Volume checks", "Daily event volume"],
+        "insights": ["Growth KPIs", "Current versus prior sessions", "Rolling seven-day sessions"],
+    }
     ids = [p["id"] for p in spec["pages"]]
     put("pages/pages.json", {"$schema": SCHEMA + "pagesMetadata/1.0.0/schema.json", "pageOrder": ids, "activePageName": ids[0]})
     for page in spec["pages"]:
@@ -58,10 +78,10 @@ def report_sources(root=ROOT):
                 roles = {"Category": fields, "Y": measures}
             name = "visual" + str(i)
             geometry = {k: pos[k] for k in ("x", "y", "width", "height")}
-            put(prefix + "visuals/" + name + "/visual.json", visual_source(name, native, {**geometry, "z": i, "tabOrder": i}, roles))
+            put(prefix + "visuals/" + name + "/visual.json", visual_source(name, native, {**geometry, "z": i, "tabOrder": i}, roles, titles[pid][i]))
         for j, field in enumerate([spec["dateSlicer"]] + (["DimCurrency.currency"] if page.get("currency") else [])):
             name = "slicer" + str(j)
             put(prefix + "visuals/" + name + "/visual.json", visual_source(name, "slicer",
                 {"x": 24 + 420*j, "y": 8, "width": 400, "height": 72, "z": 10+j, "tabOrder": 10+j},
-                {"Values": [projection(*field.split(".", 1))]}))
+                {"Values": [projection(*field.split(".", 1))]}, "Date range" if j == 0 else "Currency"))
     return files
