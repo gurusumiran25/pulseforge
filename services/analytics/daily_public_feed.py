@@ -15,6 +15,7 @@ from pathlib import Path
 
 from apps.dashboard.metrics import load_events, summarize
 from services.analytics.bi_exports import build_tables
+from services.analytics.bi_model import validate_model
 from services.analytics.bi_product import add_product_tables
 from services.analytics.bi_snapshot import publish_snapshot
 from services.analytics.bronze_manifest import verify_manifest
@@ -106,6 +107,7 @@ def build_public_feed(output_dir, *, as_of=None, days=14, sessions_per_day=40, b
                     or len(bi_sessions) != metrics["sessions"]
                     or sum(int(row["completed_payment"]) for row in bi_sessions) != paid_count):
                 raise ValueError("BI warehouse parity failed")
+            validate_model(tables)
             publish_snapshot(bi_output_dir, tables)
         # Never overwrite the last healthy public dataset until the new build passes.
         for src, name in ((bronze, "latest_bronze.csv"), (manifest, "latest_bronze.manifest.json"),
