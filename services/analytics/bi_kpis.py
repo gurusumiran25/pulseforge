@@ -65,3 +65,27 @@ def observed_retention(tables, cohort_date, offset):
         activity.setdefault(row["user_id"], set()).add(row["date_utc"])
     members = [days for days in activity.values() if min(days) == cohort_date]
     return Decimal(sum(target in days for days in members)) / Decimal(len(members)) if members else None
+
+
+def period_metrics(tables, start, end):
+    from datetime import date, timedelta
+    def rows(name):
+        return list(csv.DictReader(io.StringIO(tables[name + ".csv"].decode())))
+    start, end = date.fromisoformat(start), date.fromisoformat(end)
+    if start > end:
+        raise ValueError("Invalid date window")
+    dates = [date.fromisoformat(r["date_utc"]) for r in rows("DimDate")]
+    sessions = [date.fromisoformat(r["date_utc"]) for r in rows("FactSession")]
+    if not dates or start < min(dates) or end > max(dates):
+        raise ValueError("Window outside snapshot")
+    def count(lo, hi):
+        return sum(lo <= d <= hi for d in sessions)
+    days = (end - start).days + 1
+    current = count(start, end)
+    prior_start = start - timedelta(days=days)
+    prior = count(prior_start, start - timedelta(days=1)) if prior_start >= min(dates) else None
+    rolling_start = end - timedelta(days=6)
+    rolling = Decimal(count(rolling_start, end)) / 7 if rolling_start >= min(dates) else None
+    return {"sessions": current, "prior_sessions": prior,
+            "session_growth": Decimal(current - prior) / prior if prior else None,
+            "rolling_7_day_average": rolling}
