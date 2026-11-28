@@ -34,6 +34,21 @@ def visual_source(name, kind, position, roles, title):
             "selection": [{"properties": {"singleSelect": literal("true"),
                 "selectAllCheckboxEnabled": literal("false")}}]
         }
+    if kind == "cardVisual":
+        for measure in roles.get("Data", []):
+            if measure["nativeQueryRef"] == "Session Growth":
+                cases = [
+                    {"Condition": {"Comparison": {"ComparisonKind": op,
+                        "Left": measure["field"], "Right": {"Literal": {"Value": "0D"}}}},
+                     "Value": {"Literal": {"Value": "'" + color + "'"}}}
+                    for op, color in [(1, "#15803D"), (3, "#B91C1C")]
+                ]
+                expr = {"Conditional": {"Cases": cases,
+                    "DefaultValue": {"Literal": {"Value": "'#64748B'"}}}}
+                document["visual"].setdefault("objects", {})["calloutValue"] = [{
+                    "selector": {"metadata": measure["queryRef"]},
+                    "properties": {"color": {"solid": {"color": {"expr": expr}}}}
+                }]
     return document
 
 
