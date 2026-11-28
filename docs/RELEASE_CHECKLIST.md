@@ -73,3 +73,24 @@ Do not mark any checkbox complete solely because a source file exists. Verify ea
 - The November 25 public status reports 2,634 events, 560 sessions, 240 paid sessions and eight quality checks. Consecutive scheduled publisher and monitor run evidence remains to be reconciled.
 
 The candidate review deliberately triggers M52, M33, history scanning and real hosted browser acceptance. Keep final SHA and tag gates open until independently verified; do not interpret this evidence as production certification.
+
+
+## Candidate evidence verified on 2026-11-28 (UTC)
+
+Candidate SHA: `920e3f284b8642301bbf13ce5184a79101b51f95` (main at verification). These records certify the tested snapshot, **not** the subsequent documentation-only branch.
+
+| Gate | Verified evidence | Limit |
+| --- | --- | --- |
+| Clean install, portfolio and regression tests | [M77](https://github.com/gurusumiran25/pulseforge/actions/runs/46119216023): Python 3.12, pip check, **393 passed, 11 skipped** and one deprecation warning | Skipped tests and optional operational services are not proven by M77 alone |
+| Immutable SHA, synthetic local/CDN publication and hygiene | Same M77 run; SHA equality assertion succeeded, 2,635 events and 238 successful payment rows passed remote feed health | Public feed is synthetic; freshness is time-bounded |
+| Real Redpanda-to-dbt end-to-end | [M33](https://github.com/gurusumiran25/pulseforge/actions/runs/45696037556) and [M52](https://github.com/gurusumiran25/pulseforge/actions/runs/45696037536) succeeded on code commit `b50f25ed96febfc07a1a111f17184536eec47137` | These were **not** rerun on the final candidate SHA; two later commits change the synthetic public feed data only |
+| Hosted Streamlit in real Chromium | [M80](https://github.com/gurusumiran25/pulseforge/actions/runs/46119491797): `passed=true`, no missing items or errors; [screenshot artifact](https://github.com/gurusumiran25/pulseforge/actions/runs/46119491797/artifacts/15253295421) | Free hosted demo may sleep; not an SLA |
+| Two consecutive scheduled publisher runs | [M78](https://github.com/gurusumiran25/pulseforge/actions/runs/46119695545) validated [Nov 26](https://github.com/gurusumiran25/pulseforge/actions/runs/45810303005) and [Nov 27](https://github.com/gurusumiran25/pulseforge/actions/runs/45989419659) | Actions schedules may start later than nominal cron |
+| Independent monitors | [M79](https://github.com/gurusumiran25/pulseforge/actions/runs/46120661713) correlated successful health/CDN checks with both publishers | Auditor explicitly reports **temporal association, not exact trigger proof** |
+| Tracked content scan | [M83](https://github.com/gurusumiran25/pulseforge/actions/runs/46121166288): no tracked secret patterns, seven scan regression tests passed | Signature-based scan is not a proof of absence |
+| Reachable Git history scan | [History workflow](https://github.com/gurusumiran25/pulseforge/actions/runs/46121418892): Gitleaks v8.24.3 scanned 346 commits and found no leaks | Scanner detection limits apply |
+| Official publication | **Not yet met:** no `v1.0.0` GitHub release/tag observed at audit | Preserve candidate SHA; publish only after final release decision |
+
+This release is a reproducible **synthetic portfolio demonstration**, not a deployed production broker/warehouse or an independently certified SaaS product. Streamlit is retained; Power BI work belongs to v1.1.0 and must not modify the v1.0.0 candidate.
+
+Documentation reconciliation is intentionally done in `docs/v1.0.0-verified-release-evidence`; the original candidate SHA remains immutable. A merge would create a *new* commit SHA that needs release-gate re-evaluation; either publish the existing audited candidate and separately merge these docs afterwards, or explicitly recertify the merged commit.
