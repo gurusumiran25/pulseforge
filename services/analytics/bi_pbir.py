@@ -47,7 +47,9 @@ def report_sources(root=ROOT):
                 native, roles = "pivotTable", {"Rows": fields[:1], "Columns": fields[1:], "Values": measures}
             elif kind == "table":
                 native, roles = "tableEx", {"Values": fields + measures}
-            elif kind in ("cards", "funnel") or not fields:
+            elif kind == "cards":
+                native, roles = "cardVisual", {"Data": measures}
+            elif kind == "funnel" or not fields:
                 # Preserve every metric using a table fallback until native multi-measure funnel is validated.
                 native, roles = "tableEx", {"Values": fields + measures}
             else:
