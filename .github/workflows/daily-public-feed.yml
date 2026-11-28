@@ -37,14 +37,32 @@ jobs:
           python -m pip install -e '.[dev,portfolio]'
           python -m pip check
       - name: Build rolling 14-day synthetic data and validate warehouse
-        run: python -m services.analytics.daily_public_feed --output-dir data/public --days 14 --sessions-per-day 40
+        run: python -m services.analytics.daily_public_feed --output-dir data/public --bi-output-dir data/bi --days 14 --sessions-per-day 40
       - name: Require verified Bronze and payment sidecar before publishing
         run: python -m services.analytics.public_feed_health --directory data/public --max-age-hours 2 --require-payment-sidecar
+      - name: Verify BI snapshot before git publication
+        run: |
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          root = Path("data/bi")
+          pointer = json.loads((root / "current.json").read_text())
+          snapshot = root / pointer["snapshot"]
+          raw = (snapshot / "manifest.json").read_bytes()
+          assert hashlib.sha256(raw).hexdigest() == pointer["snapshot"]
+          files = json.loads(raw)["files"]
+          assert set(files) == {"FactEvent.csv", "FactSession.csv", "FactPayment.csv", "FactDailyUser.csv", "DimDate.csv", "DimCustomer.csv", "DimCurrency.csv", "FactProductView.csv", "DimProduct.csv"}
+          for name, meta in files.items():
+              data = (snapshot / name).read_bytes()
+              assert len(data) == meta["bytes"]
+              assert hashlib.sha256(data).hexdigest() == meta["sha256"]
+          PY
       - name: Publish validated CSV, manifest, and status together
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/public/latest_bronze.csv data/public/latest_bronze.manifest.json data/public/latest_payments.csv data/public/status.json
+          git add data/bi/current.json data/bi/$(python -c 'import json; print(json.load(open("data/bi/current.json"))["snapshot"])')
           if git diff --cached --quiet; then
             echo "No data changes to publish"
           else
