@@ -67,6 +67,7 @@ def test_daily_publication_quality_and_dates(tmp_path):
     # M92: verify the same pinned snapshot through all reference gates.
     from datetime import datetime, timezone
 
+    from services.analytics.bi_acceptance import expected_evidence
     from services.analytics.bi_kpis import reference_kpis
     from services.analytics.bi_navigation import load_layout, validate_layout
     from services.analytics.bi_refresh import verify_refresh
@@ -79,10 +80,22 @@ def test_daily_publication_quality_and_dates(tmp_path):
     assert kpis["events"] == result["events"]
     assert kpis["sessions"] == result["sessions"]
     assert kpis["paid_sessions"] == result["paid_sessions"]
+    evidence = expected_evidence(bi_root, now=datetime(2026, 11, 23, tzinfo=timezone.utc))
+    assert evidence["snapshot"] == pointer["snapshot"]
+    assert evidence["unfiltered"] == kpis
+    assert evidence["by_currency"]
+    for currency, values in evidence["by_currency"].items():
+        assert values == reference_kpis(tables, currency)
+    output = os.getenv("PULSEFORGE_ACCEPTANCE_OUTPUT")
+    if output:
+        with open(output, "w", encoding="utf-8") as handle:
+            json.dump(evidence, handle, indent=2, default=str)
     assert validate_report(load_report()) == 24
     assert validate_layout(load_layout(), load_report()) == 7
     # A corrupted immutable file must prevent refresh, without changing the pointer.
     (snapshot / "FactEvent.csv").write_bytes(b"corrupt")
     with pytest.raises(ValueError, match="integrity"):
         verify_refresh(bi_root, now=datetime(2026, 11, 23, tzinfo=timezone.utc))
+    with pytest.raises(ValueError, match="integrity"):
+        expected_evidence(bi_root, now=datetime(2026, 11, 23, tzinfo=timezone.utc))
     assert json.loads((bi_root / "current.json").read_text()) == pointer
