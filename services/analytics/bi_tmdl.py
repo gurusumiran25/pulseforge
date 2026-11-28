@@ -73,6 +73,7 @@ def generate_model_sources(root=ROOT, snapshot_id="UNCONFIGURED"):
     sources["tables/FactEvent.tmdl"] = "\n".join(lines) + "\n" + sources["tables/FactEvent.tmdl"].split("\n", 1)[1]
     fn = (root / "powerbi/queries/LoadSnapshotTable.pq").read_text()
     sources["expressions.tmdl"] = 'expression SnapshotId = "' + snapshot_id + '" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]\n\nexpression LoadSnapshotTable =\n' + "\n".join("\t" + line for line in fn.splitlines()) + "\n"
+    sources["expressions.tmdl"] += '\nexpression SnapshotRoot = "" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=false]\n'
     calendar = re.search(r"```powerquery\n(.*?)\n```", (root / "powerbi/measures/DATE_COHORT.md").read_text(), re.S).group(1)
     sources["tables/DimDate.tmdl"] = sources["tables/DimDate.tmdl"].split("\t\tsource =", 1)[0] + "\t\tsource =\n" + "\n".join("\t\t\t" + line for line in calendar.splitlines()) + "\n"
     sources["tables/CohortDay.tmdl"] = "table CohortDay\n\n\tcolumn Value\n\t\tdataType: int64\n\t\tsourceColumn: [Value]\n\t\tsummarizeBy: none\n\n\tpartition CohortDay = calculated\n\t\tmode: import\n\t\tsource = GENERATESERIES(1,7,1)\n"
@@ -85,7 +86,7 @@ def write_semantic_model(output, root=ROOT, snapshot_id="UNCONFIGURED"):
     sources = generate_model_sources(root, snapshot_id)
     names = sorted(Path(name).stem for name in sources if name.startswith("tables/"))
     sources["database.tmdl"] = "database\n\tcompatibilityLevel: 1600\n"
-    sources["model.tmdl"] = "model Model\n\tculture: en-US\n\tdefaultPowerBIDataSourceVersion: powerBI_V3\n\tsourceQueryCulture: en-US\n\n" + "\n".join("ref table " + name for name in names) + "\n\nref expression SnapshotId\nref expression LoadSnapshotTable\n"
+    sources["model.tmdl"] = "model Model\n\tculture: en-US\n\tdefaultPowerBIDataSourceVersion: powerBI_V3\n\tsourceQueryCulture: en-US\n\n" + "\n".join("ref table " + name for name in names) + "\n\nref expression SnapshotId\nref expression SnapshotRoot\nref expression LoadSnapshotTable\n"
     if output.exists():
         raise FileExistsError(output)
     for name, content in sources.items():
