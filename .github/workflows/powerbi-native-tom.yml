@@ -1,0 +1,37 @@
+name: Power BI native TOM validation
+on:
+  push:
+    branches: [main, feature/powerbi-v1.1.0]
+    paths: ['powerbi/**', 'docs/M88_POWERBI_DAX.md', 'services/analytics/bi_tmdl.py', 'services/analytics/bi_pb*.py', '.github/workflows/powerbi-native-tom.yml']
+  pull_request:
+    paths: ['powerbi/**', 'docs/M88_POWERBI_DAX.md', 'services/analytics/bi_tmdl.py', 'services/analytics/bi_pb*.py', '.github/workflows/powerbi-native-tom.yml']
+permissions:
+  contents: read
+jobs:
+  deserialize:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - run: python -m services.analytics.bi_pbip build/PulseForge
+      - shell: pwsh
+        run: |
+          dotnet new console -o build/TomCheck --framework net8.0
+          dotnet add build/TomCheck package Microsoft.AnalysisServices
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          @'
+          using Microsoft.AnalysisServices.Tabular;
+          var database = TmdlSerializer.DeserializeDatabaseFromFolder(args[0]);
+          var model = database.Model;
+          if (model.Tables.Count != 10 || model.Relationships.Count != 12 ||
+              model.Tables.Sum(t => t.Measures.Count) != 34)
+              throw new Exception("Unexpected model counts");
+          Console.WriteLine("TOM deserialization passed: 10 tables, 12 relationships, 34 measures");
+          '@ | Set-Content build/TomCheck/Program.cs
+          dotnet run --project build/TomCheck -- (Resolve-Path build/PulseForge/PulseForge.SemanticModel/definition).Path
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
