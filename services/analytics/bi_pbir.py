@@ -17,7 +17,7 @@ def literal(value):
 
 
 def visual_source(name, kind, position, roles, title):
-    return {"$schema": SCHEMA + "visualContainer/2.0.0/schema.json",
+    document = {"$schema": SCHEMA + "visualContainer/2.0.0/schema.json",
             "name": name, "position": position,
             "visual": {"visualType": kind, "query": {"queryState": {
                 role: {"projections": values} for role, values in roles.items() if values
@@ -29,6 +29,12 @@ def visual_source(name, kind, position, roles, title):
                 "background": [{"properties": {"show": literal("true"),
                     "transparency": literal("0D")}}]
             }}}
+    if kind == "slicer" and title == "Currency":
+        document["visual"]["objects"] = {
+            "selection": [{"properties": {"singleSelect": literal("true"),
+                "selectAllCheckboxEnabled": literal("false")}}]
+        }
+    return document
 
 
 def report_sources(root=ROOT):
