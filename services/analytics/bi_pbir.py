@@ -49,9 +49,10 @@ def report_sources(root=ROOT):
                 native, roles = "tableEx", {"Values": fields + measures}
             elif kind == "cards":
                 native, roles = "cardVisual", {"Data": measures}
-            elif kind == "funnel" or not fields:
-                # Preserve every metric using a table fallback until native multi-measure funnel is validated.
-                native, roles = "tableEx", {"Values": fields + measures}
+            elif kind == "funnel":
+                native, roles = "funnel", {"Y": measures}
+            elif not fields:
+                native, roles = "clusteredBarChart", {"Y": measures}
             else:
                 native = {"line": "lineChart", "bar": "clusteredBarChart"}[kind]
                 roles = {"Category": fields, "Y": measures}
