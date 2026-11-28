@@ -1,0 +1,283 @@
+{
+  "format": "pulseforge-report-contract-v1",
+  "canvas": {
+    "width": 1280,
+    "height": 720
+  },
+  "dateSlicer": "DimDate.date_utc",
+  "pages": [
+    {
+      "id": "executive",
+      "title": "Executive overview",
+      "currency": true,
+      "visuals": [
+        {
+          "type": "cards",
+          "measures": [
+            "Sessions",
+            "Customers",
+            "Purchase Conversion",
+            "Net Revenue"
+          ],
+          "fields": []
+        },
+        {
+          "type": "line",
+          "measures": [
+            "Sessions"
+          ],
+          "fields": [
+            "DimDate.date_utc"
+          ]
+        },
+        {
+          "type": "funnel",
+          "measures": [
+            "Product View Sessions",
+            "Cart Sessions",
+            "Checkout Sessions",
+            "Paid Sessions"
+          ],
+          "fields": []
+        },
+        {
+          "type": "line",
+          "measures": [
+            "Net Revenue"
+          ],
+          "fields": [
+            "DimDate.date_utc"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "journey",
+      "title": "Customer journey",
+      "visuals": [
+        {
+          "type": "cards",
+          "measures": [
+            "Product View Sessions",
+            "Cart Sessions",
+            "Checkout Sessions",
+            "Paid Sessions"
+          ],
+          "fields": []
+        },
+        {
+          "type": "funnel",
+          "measures": [
+            "Product View Sessions",
+            "Cart Sessions",
+            "Checkout Sessions",
+            "Paid Sessions"
+          ],
+          "fields": []
+        },
+        {
+          "type": "line",
+          "measures": [
+            "Purchase Conversion"
+          ],
+          "fields": [
+            "DimDate.date_utc"
+          ]
+        },
+        {
+          "type": "bar",
+          "measures": [
+            "Events"
+          ],
+          "fields": [
+            "FactEvent.event_name"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "payments",
+      "title": "Payments",
+      "currency": true,
+      "visuals": [
+        {
+          "type": "cards",
+          "measures": [
+            "Successful Payments",
+            "Failed Payments",
+            "Payment Failure Rate",
+            "Refund Amount"
+          ],
+          "fields": []
+        },
+        {
+          "type": "line",
+          "measures": [
+            "Successful Payments",
+            "Failed Payments"
+          ],
+          "fields": [
+            "DimDate.date_utc"
+          ]
+        },
+        {
+          "type": "line",
+          "measures": [
+            "Gross Revenue",
+            "Refund Amount",
+            "Net Revenue"
+          ],
+          "fields": [
+            "DimDate.date_utc"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "customers",
+      "title": "Customer intelligence",
+      "currency": true,
+      "visuals": [
+        {
+          "type": "cards",
+          "measures": [
+            "Observed Active Customers",
+            "Repeat Activity Rate"
+          ],
+          "fields": []
+        },
+        {
+          "type": "matrix",
+          "measures": [
+            "Observed Cohort Retention"
+          ],
+          "fields": [
+            "DimDate.date_utc",
+            "CohortDay.Value"
+          ]
+        },
+        {
+          "type": "table",
+          "measures": [
+            "Recency Days",
+            "Purchase Frequency",
+            "Monetary Value",
+            "RFM Segment"
+          ],
+          "fields": [
+            "DimCustomer.user_id"
+          ]
+        },
+        {
+          "type": "line",
+          "measures": [
+            "Daily Active Customers"
+          ],
+          "fields": [
+            "DimDate.date_utc"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "products",
+      "title": "Product intelligence",
+      "visuals": [
+        {
+          "type": "cards",
+          "measures": [
+            "Product Views",
+            "Product Viewers",
+            "Product Viewing Sessions"
+          ],
+          "fields": []
+        },
+        {
+          "type": "bar",
+          "measures": [
+            "Product Views"
+          ],
+          "fields": [
+            "DimProduct.category"
+          ]
+        },
+        {
+          "type": "bar",
+          "measures": [
+            "Product Views"
+          ],
+          "fields": [
+            "DimProduct.product_id"
+          ]
+        },
+        {
+          "type": "line",
+          "measures": [
+            "Product Views"
+          ],
+          "fields": [
+            "DimDate.date_utc"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quality",
+      "title": "Data quality",
+      "visuals": [
+        {
+          "type": "cards",
+          "measures": [
+            "Events",
+            "Sessions"
+          ],
+          "fields": []
+        },
+        {
+          "type": "line",
+          "measures": [
+            "Events"
+          ],
+          "fields": [
+            "DimDate.date_utc"
+          ]
+        }
+      ],
+      "metadata": [
+        "snapshot_id",
+        "observation_window"
+      ]
+    },
+    {
+      "id": "insights",
+      "title": "Insights",
+      "visuals": [
+        {
+          "type": "cards",
+          "measures": [
+            "Session Growth",
+            "Rolling 7 Day Sessions"
+          ],
+          "fields": []
+        },
+        {
+          "type": "bar",
+          "measures": [
+            "Sessions",
+            "Prior Window Sessions"
+          ],
+          "fields": []
+        },
+        {
+          "type": "line",
+          "measures": [
+            "Rolling 7 Day Sessions"
+          ],
+          "fields": [
+            "DimDate.date_utc"
+          ]
+        }
+      ]
+    }
+  ]
+}
