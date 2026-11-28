@@ -1,0 +1,27 @@
+name: M88 Power BI measure reference
+on:
+  pull_request:
+    paths:
+      - 'services/analytics/bi_kpis.py'
+      - 'tests/analytics/test_m88_bi_kpis.py'
+      - 'powerbi/measures/**'
+      - '.github/workflows/m88-powerbi-measures.yml'
+  push:
+    branches: [main, feature/powerbi-v1.1.0]
+    paths:
+      - 'services/analytics/bi_kpis.py'
+      - 'tests/analytics/test_m88_bi_kpis.py'
+      - 'powerbi/measures/**'
+      - '.github/workflows/m88-powerbi-measures.yml'
+permissions:
+  contents: read
+jobs:
+  reference-kpis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install pytest
+      - run: python -m pytest -q tests/analytics/test_m88_bi_kpis.py
