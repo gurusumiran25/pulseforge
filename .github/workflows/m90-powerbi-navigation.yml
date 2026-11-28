@@ -1,0 +1,30 @@
+name: M90 Power BI navigation and layout
+on:
+  pull_request:
+    paths:
+      - 'powerbi/report/**'
+      - 'services/analytics/bi_navigation.py'
+      - 'services/analytics/bi_report.py'
+      - 'tests/analytics/test_m90_bi_navigation.py'
+      - '.github/workflows/m90-powerbi-navigation.yml'
+  push:
+    branches: [main, feature/powerbi-v1.1.0]
+    paths:
+      - 'powerbi/report/**'
+      - 'services/analytics/bi_navigation.py'
+      - 'services/analytics/bi_report.py'
+      - 'tests/analytics/test_m90_bi_navigation.py'
+      - '.github/workflows/m90-powerbi-navigation.yml'
+permissions:
+  contents: read
+jobs:
+  navigation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install pytest
+      - run: python -m pytest -q tests/analytics/test_m90_bi_navigation.py
