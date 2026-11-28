@@ -15,6 +15,7 @@ jobs:
     env:
       PULSEFORGE_RUN_M53_DAILY: '1'
       PULSEFORGE_PUBLIC_FEED: '0'
+      PULSEFORGE_ACCEPTANCE_BUNDLE: 'powerbi-acceptance-bundle'
       PULSEFORGE_ACCEPTANCE_OUTPUT: 'powerbi-expected-kpis.json'
     steps:
       - uses: actions/checkout@v4
@@ -28,4 +29,9 @@ jobs:
         with:
           name: powerbi-expected-kpis
           path: powerbi-expected-kpis.json
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: powerbi-acceptance-bundle
+          path: powerbi-acceptance-bundle/
           if-no-files-found: error
