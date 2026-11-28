@@ -1,0 +1,34 @@
+{
+  "name": "PulseForge Analytics",
+  "dataColors": [
+    "#2563EB",
+    "#0D9488",
+    "#7C3AED",
+    "#D97706",
+    "#64748B",
+    "#DC2626"
+  ],
+  "background": "#F1F5F9",
+  "foreground": "#172554",
+  "tableAccent": "#2563EB",
+  "good": "#15803D",
+  "neutral": "#64748B",
+  "bad": "#B91C1C",
+  "textClasses": {
+    "title": {
+      "fontFace": "Segoe UI",
+      "fontSize": 12,
+      "color": "#172554"
+    },
+    "label": {
+      "fontFace": "Segoe UI",
+      "fontSize": 10,
+      "color": "#334155"
+    },
+    "callout": {
+      "fontFace": "Segoe UI",
+      "fontSize": 26,
+      "color": "#172554"
+    }
+  }
+}

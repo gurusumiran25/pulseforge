@@ -1,0 +1,21 @@
+name: M91 Power BI refresh integrity
+on:
+  push:
+    branches: [feature/powerbi-v1.1.0]
+    paths: ['services/analytics/bi_*.py', 'tests/analytics/test_m9*.py', '.github/workflows/m91-powerbi-refresh.yml']
+  pull_request:
+    paths: ['services/analytics/bi_*.py', 'tests/analytics/test_m9*.py', '.github/workflows/m91-powerbi-refresh.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  refresh-integrity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install pytest
+      - run: python -m pytest -q tests/analytics/test_m91_bi_refresh.py

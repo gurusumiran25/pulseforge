@@ -1,0 +1,120 @@
+{
+  "dimensions": {
+    "DimDate": [
+      "date_utc"
+    ],
+    "DimCustomer": [
+      "user_id"
+    ],
+    "DimCurrency": [
+      "currency"
+    ],
+    "DimProduct": [
+      "product_id"
+    ]
+  },
+  "facts": {
+    "FactEvent": [
+      "event_id"
+    ],
+    "FactSession": [
+      "session_id"
+    ],
+    "FactPayment": [
+      "event_id"
+    ],
+    "FactDailyUser": [
+      "date_utc",
+      "user_id"
+    ],
+    "FactProductView": [
+      "event_id"
+    ]
+  },
+  "relationships": [
+    {
+      "dimension": "DimDate",
+      "fact": "FactEvent",
+      "key": "date_utc",
+      "cardinality": "one-to-many",
+      "filter": "single"
+    },
+    {
+      "dimension": "DimCustomer",
+      "fact": "FactEvent",
+      "key": "user_id",
+      "cardinality": "one-to-many",
+      "filter": "single"
+    },
+    {
+      "dimension": "DimDate",
+      "fact": "FactSession",
+      "key": "date_utc",
+      "cardinality": "one-to-many",
+      "filter": "single"
+    },
+    {
+      "dimension": "DimCustomer",
+      "fact": "FactSession",
+      "key": "user_id",
+      "cardinality": "one-to-many",
+      "filter": "single"
+    },
+    {
+      "dimension": "DimDate",
+      "fact": "FactPayment",
+      "key": "date_utc",
+      "cardinality": "one-to-many",
+      "filter": "single"
+    },
+    {
+      "dimension": "DimCustomer",
+      "fact": "FactPayment",
+      "key": "user_id",
+      "cardinality": "one-to-many",
+      "filter": "single"
+    },
+    {
+      "dimension": "DimCurrency",
+      "fact": "FactPayment",
+      "key": "currency",
+      "cardinality": "one-to-many",
+      "filter": "single"
+    },
+    {
+      "dimension": "DimDate",
+      "fact": "FactDailyUser",
+      "key": "date_utc",
+      "cardinality": "one-to-many",
+      "filter": "single"
+    },
+    {
+      "dimension": "DimCustomer",
+      "fact": "FactDailyUser",
+      "key": "user_id",
+      "cardinality": "one-to-many",
+      "filter": "single"
+    },
+    {
+      "dimension": "DimDate",
+      "fact": "FactProductView",
+      "key": "date_utc",
+      "cardinality": "one-to-many",
+      "filter": "single"
+    },
+    {
+      "dimension": "DimCustomer",
+      "fact": "FactProductView",
+      "key": "user_id",
+      "cardinality": "one-to-many",
+      "filter": "single"
+    },
+    {
+      "dimension": "DimProduct",
+      "fact": "FactProductView",
+      "key": "product_id",
+      "cardinality": "one-to-many",
+      "filter": "single"
+    }
+  ]
+}

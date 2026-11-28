@@ -5,6 +5,7 @@ then atomically replaces public artifacts on the runner. GitHub Actions commits
 both files in one git commit only after all validation succeeds.
 """
 import argparse
+import csv
 import json
 import os
 import shutil
@@ -13,6 +14,10 @@ from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
 
 from apps.dashboard.metrics import load_events, summarize
+from services.analytics.bi_exports import build_tables
+from services.analytics.bi_model import validate_model
+from services.analytics.bi_product import add_product_tables
+from services.analytics.bi_snapshot import publish_snapshot
 from services.analytics.bronze_manifest import verify_manifest
 from services.analytics.payment_sidecar import (
     export_payment_sidecar,
@@ -37,7 +42,7 @@ def synthetic_user_id(cohort, index, *, repeat_users=10):
     return f"synthetic_new_{cohort.isoformat()}_{index:03d}"
 
 
-def build_public_feed(output_dir, *, as_of=None, days=14, sessions_per_day=40):
+def build_public_feed(output_dir, *, as_of=None, days=14, sessions_per_day=40, bi_output_dir=None):
     if not 1 <= days <= 31 or not 1 <= sessions_per_day <= 200:
         raise ValueError("days must be 1..31 and sessions_per_day 1..200")
     day = as_of or datetime.now(timezone.utc).date()
@@ -89,6 +94,21 @@ def build_public_feed(output_dir, *, as_of=None, days=14, sessions_per_day=40):
         ):
             raise ValueError("Payment sidecar/bronze payment count mismatch")
         payment_manifest["bronze_sha256"] = verified["sha256"]
+        if bi_output_dir is not None:
+            with bronze.open(encoding="utf-8", newline="") as handle:
+                bi_events = list(csv.DictReader(handle))
+            with payment_file.open(encoding="utf-8", newline="") as handle:
+                bi_payments = list(csv.DictReader(handle))
+            tables = add_product_tables(build_tables(bi_events, bi_payments), store.db_path)
+            def table_rows(name):
+                return list(csv.DictReader(tables[name].decode("utf-8").splitlines()))
+            bi_sessions = table_rows("FactSession.csv")
+            if (len(table_rows("FactEvent.csv")) != warehouse_count
+                    or len(bi_sessions) != metrics["sessions"]
+                    or sum(int(row["completed_payment"]) for row in bi_sessions) != paid_count):
+                raise ValueError("BI warehouse parity failed")
+            validate_model(tables)
+            publish_snapshot(bi_output_dir, tables)
         # Never overwrite the last healthy public dataset until the new build passes.
         for src, name in ((bronze, "latest_bronze.csv"), (manifest, "latest_bronze.manifest.json"),
                           (payment_file, "latest_payments.csv")):
@@ -113,9 +133,10 @@ def main():
     parser.add_argument("--as-of")
     parser.add_argument("--days", type=int, default=14)
     parser.add_argument("--sessions-per-day", type=int, default=40)
+    parser.add_argument("--bi-output-dir", help="Optional isolated BI snapshot directory")
     args = parser.parse_args()
     print(json.dumps(build_public_feed(args.output_dir, as_of=date.fromisoformat(args.as_of) if args.as_of else None,
-                                       days=args.days, sessions_per_day=args.sessions_per_day), indent=2))
+                                       days=args.days, sessions_per_day=args.sessions_per_day, bi_output_dir=args.bi_output_dir), indent=2))
 
 
 if __name__ == "__main__":

@@ -1,0 +1,270 @@
+{
+  "canvas": {
+    "width": 1280,
+    "height": 720
+  },
+  "navigation": [
+    {
+      "target": "executive",
+      "label": "Executive overview"
+    },
+    {
+      "target": "journey",
+      "label": "Customer journey"
+    },
+    {
+      "target": "payments",
+      "label": "Payments"
+    },
+    {
+      "target": "customers",
+      "label": "Customer intelligence"
+    },
+    {
+      "target": "products",
+      "label": "Product intelligence"
+    },
+    {
+      "target": "quality",
+      "label": "Data quality"
+    },
+    {
+      "target": "insights",
+      "label": "Insights"
+    }
+  ],
+  "pages": [
+    {
+      "id": "executive",
+      "visuals": [
+        {
+          "index": 0,
+          "x": 24,
+          "y": 96,
+          "width": 1232,
+          "height": 128
+        },
+        {
+          "index": 1,
+          "x": 24,
+          "y": 240,
+          "width": 608,
+          "height": 208
+        },
+        {
+          "index": 2,
+          "x": 648,
+          "y": 240,
+          "width": 608,
+          "height": 208
+        },
+        {
+          "index": 3,
+          "x": 24,
+          "y": 464,
+          "width": 608,
+          "height": 208
+        }
+      ],
+      "currencyControl": true
+    },
+    {
+      "id": "journey",
+      "visuals": [
+        {
+          "index": 0,
+          "x": 24,
+          "y": 96,
+          "width": 1232,
+          "height": 128
+        },
+        {
+          "index": 1,
+          "x": 24,
+          "y": 240,
+          "width": 608,
+          "height": 208
+        },
+        {
+          "index": 2,
+          "x": 648,
+          "y": 240,
+          "width": 608,
+          "height": 208
+        },
+        {
+          "index": 3,
+          "x": 24,
+          "y": 464,
+          "width": 608,
+          "height": 208
+        }
+      ],
+      "currencyControl": false
+    },
+    {
+      "id": "payments",
+      "visuals": [
+        {
+          "index": 0,
+          "x": 24,
+          "y": 96,
+          "width": 1232,
+          "height": 128
+        },
+        {
+          "index": 1,
+          "x": 24,
+          "y": 240,
+          "width": 608,
+          "height": 208
+        },
+        {
+          "index": 2,
+          "x": 648,
+          "y": 240,
+          "width": 608,
+          "height": 208
+        }
+      ],
+      "currencyControl": true
+    },
+    {
+      "id": "customers",
+      "visuals": [
+        {
+          "index": 0,
+          "x": 24,
+          "y": 96,
+          "width": 1232,
+          "height": 128
+        },
+        {
+          "index": 1,
+          "x": 24,
+          "y": 240,
+          "width": 608,
+          "height": 208
+        },
+        {
+          "index": 2,
+          "x": 648,
+          "y": 240,
+          "width": 608,
+          "height": 208
+        },
+        {
+          "index": 3,
+          "x": 24,
+          "y": 464,
+          "width": 608,
+          "height": 208
+        }
+      ],
+      "currencyControl": true
+    },
+    {
+      "id": "products",
+      "visuals": [
+        {
+          "index": 0,
+          "x": 24,
+          "y": 96,
+          "width": 1232,
+          "height": 128
+        },
+        {
+          "index": 1,
+          "x": 24,
+          "y": 240,
+          "width": 608,
+          "height": 208
+        },
+        {
+          "index": 2,
+          "x": 648,
+          "y": 240,
+          "width": 608,
+          "height": 208
+        },
+        {
+          "index": 3,
+          "x": 24,
+          "y": 464,
+          "width": 608,
+          "height": 208
+        }
+      ],
+      "currencyControl": false
+    },
+    {
+      "id": "quality",
+      "visuals": [
+        {
+          "index": 0,
+          "x": 24,
+          "y": 96,
+          "width": 1232,
+          "height": 128
+        },
+        {
+          "index": 1,
+          "x": 24,
+          "y": 240,
+          "width": 608,
+          "height": 208
+        }
+      ],
+      "currencyControl": false
+    },
+    {
+      "id": "insights",
+      "visuals": [
+        {
+          "index": 0,
+          "x": 24,
+          "y": 96,
+          "width": 1232,
+          "height": 128
+        },
+        {
+          "index": 1,
+          "x": 24,
+          "y": 240,
+          "width": 608,
+          "height": 208
+        },
+        {
+          "index": 2,
+          "x": 648,
+          "y": 240,
+          "width": 608,
+          "height": 208
+        }
+      ],
+      "currencyControl": false
+    }
+  ],
+  "drillthrough": [
+    {
+      "source": "executive",
+      "target": "journey",
+      "field": "DimDate.date_utc"
+    },
+    {
+      "source": "executive",
+      "target": "payments",
+      "field": "DimDate.date_utc"
+    }
+  ],
+  "rules": {
+    "productFilters": "products-only",
+    "currencyAmounts": "single-currency",
+    "cohortImmature": "blank",
+    "growthFormatting": {
+      "negative": "red",
+      "positive": "green",
+      "zero": "neutral"
+    }
+  }
+}
