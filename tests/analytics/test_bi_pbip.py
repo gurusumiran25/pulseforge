@@ -63,3 +63,15 @@ def test_native_report_features():
     assert sum(v["visualType"] == "funnel" for v in visuals) == 2
     growth = [v for v in visuals if "calloutValue" in v.get("objects", {})]
     assert len(growth) == 1
+
+
+def test_local_snapshot_parameter():
+    from services.analytics.bi_pbip import package_sources
+
+    snapshot = "a" * 64
+    files = package_sources(snapshot_id=snapshot)
+    expressions = files["PulseForge.SemanticModel/definition/expressions.tmdl"]
+    assert 'expression SnapshotId = "' + snapshot + '"' in expressions
+    assert 'expression SnapshotRoot = ""' in expressions
+    assert 'File.Contents(SnapshotRoot & "/" & Id & "/" & Checked)' in expressions
+    assert 'else Web.Contents("https://raw.githubusercontent.com"' in expressions
