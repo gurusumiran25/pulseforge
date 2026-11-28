@@ -15,6 +15,7 @@ from pathlib import Path
 
 from apps.dashboard.metrics import load_events, summarize
 from services.analytics.bi_exports import build_tables
+from services.analytics.bi_product import add_product_tables
 from services.analytics.bi_snapshot import publish_snapshot
 from services.analytics.bronze_manifest import verify_manifest
 from services.analytics.payment_sidecar import (
@@ -97,7 +98,7 @@ def build_public_feed(output_dir, *, as_of=None, days=14, sessions_per_day=40, b
                 bi_events = list(csv.DictReader(handle))
             with payment_file.open(encoding="utf-8", newline="") as handle:
                 bi_payments = list(csv.DictReader(handle))
-            tables = build_tables(bi_events, bi_payments)
+            tables = add_product_tables(build_tables(bi_events, bi_payments), store.db_path)
             def table_rows(name):
                 return list(csv.DictReader(tables[name].decode("utf-8").splitlines()))
             bi_sessions = table_rows("FactSession.csv")
