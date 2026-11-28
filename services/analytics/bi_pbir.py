@@ -84,4 +84,9 @@ def report_sources(root=ROOT):
             put(prefix + "visuals/" + name + "/visual.json", visual_source(name, "slicer",
                 {"x": 24 + 420*j, "y": 8, "width": 400, "height": 72, "z": 10+j, "tabOrder": 10+j},
                 {"Values": [projection(*field.split(".", 1))]}, "Date range" if j == 0 else "Currency"))
+        name = "pageNavigator"
+        put(prefix + "visuals/" + name + "/visual.json", visual_source(
+            name, "pageNavigator",
+            {"x": 864, "y": 8, "width": 392, "height": 72, "z": 20, "tabOrder": 20},
+            {}, "Report pages"))
     return files
