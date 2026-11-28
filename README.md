@@ -12,7 +12,7 @@ PulseForge is an actively developed Python portfolio project exploring synthetic
 
 - [Professional portfolio case study](docs/PORTFOLIO_CASE_STUDY.md) — business objectives, architecture, synthetic metrics and engineering tradeoffs.
 
-- [Public synthetic analytics dashboard](https://pulseforge-analytics.streamlit.app/) — free hosting may require a wake-up; independent hosted acceptance remains pending.
+- [Public synthetic analytics dashboard](https://pulseforge-analytics.streamlit.app/) — free hosting may require a wake-up; [hosted Chromium acceptance passed on 2026-11-28](https://github.com/gurusumiran25/pulseforge/actions/runs/46119491797) (synthetic demo; not a production deployment).
 - [Architecture and engineering boundaries](docs/architecture.md)
 - [Reproducible demo and interview talking points](docs/PORTFOLIO_DEMO.md)
 - [Release acceptance checklist](docs/RELEASE_CHECKLIST.md)
@@ -228,7 +228,7 @@ See [event catalogue](docs/event_catalogue.md) and `contracts/event_validation.p
 
 ## Testing and safety
 
-The standard CI workflow runs `python -m pytest` on Ubuntu / Python 3.12. Dedicated CI workflows separately test real Redpanda delivery (M26/M33), dbt quality gates (M43), clean-install dashboard and warehouse smoke tests (M44), and the real synthetic portfolio demo (M45). These checks do not constitute production deployment or browser-level UI verification.
+The standard CI workflow runs `python -m pytest` on Ubuntu / Python 3.12. Dedicated CI workflows separately test real Redpanda delivery (M26/M33), dbt quality gates (M43), clean-install dashboard and warehouse smoke tests (M44), and the real synthetic portfolio demo (M45). These checks do not constitute production deployment. Separately, [real hosted Chromium browser acceptance](https://github.com/gurusumiran25/pulseforge/actions/runs/46119491797) passed on candidate `920e3f284b8642301bbf13ce5184a79101b51f95`.
 
 A dedicated GitHub Actions workflow verifies a disposable live Redpanda broker (M26); standard CI alone does not. CI success does **not** prove production deployment or all operational paths are error-free.
 
@@ -254,7 +254,7 @@ Recovery planning is preview-only by default. Production automatic self-healing 
 
 The public-data pipeline runs daily via [GitHub Actions](.github/workflows/daily-public-feed.yml) at 02:30 UTC (08:00 IST). It generates a rolling 14-day synthetic dataset, builds real dbt DuckDB marts, checks semantic quality and publishes Bronze CSV, SHA-256 manifest, a privacy-minimal synthetic payment CSV, and status metadata together in `data/public/`. The independent [M55 feed-health monitor](.github/workflows/m55-public-feed-health.yml) runs at 06:00 UTC (11:30 IST) and fails when the published feed is stale (over 36 hours), corrupted or inconsistent with the quality status. Schedules can be delayed by GitHub and do not constitute an uptime SLA.
 
-The Streamlit app supports this feed with `PULSEFORGE_PUBLIC_FEED=1` and verifies integrity before rendering. **A public Streamlit Community Cloud URL has been supplied, but live browser-level customer analytics rendering is not independently verified**; see [deployment and acceptance instructions](docs/M53_STREAMLIT_CLOUD.md). This is a separately scheduled synthetic warehouse pipeline, not continuously streaming Kafka events into DuckDB.
+The Streamlit app supports this feed with `PULSEFORGE_PUBLIC_FEED=1` and verifies integrity before rendering. **The public Streamlit Community Cloud demo passed independent hosted Chromium browser acceptance on 2026-11-28** ([workflow and screenshot artifact](https://github.com/gurusumiran25/pulseforge/actions/runs/46119491797)); see [deployment and acceptance instructions](docs/M53_STREAMLIT_CLOUD.md). This is a separately scheduled synthetic warehouse pipeline, not continuously streaming Kafka events into DuckDB.
 
 ## Warehouse and dashboard
 
@@ -272,4 +272,4 @@ The repository includes dbt DuckDB Bronze/Silver/Gold transformations, a one-sho
 - [M18 safety and self-healing checkpoint](docs/M18_AUTOMATED_MONITORING.md)
 - [Local-first decision](docs/decisions/0001-local-first.md)
 
-**Project status:** Portfolio release hardening; synthetic data only. Final release acceptance and tagging remain pending.
+**Project status (2026-11-28):** The frozen candidate `920e3f284b8642301bbf13ce5184a79101b51f95` passed [M77 exact-SHA validation](https://github.com/gurusumiran25/pulseforge/actions/runs/46119216023), [hosted browser acceptance](https://github.com/gurusumiran25/pulseforge/actions/runs/46119491797), [scheduled publisher evidence](https://github.com/gurusumiran25/pulseforge/actions/runs/46119695545), [monitor evidence](https://github.com/gurusumiran25/pulseforge/actions/runs/46120661713), [tracked-content scanning](https://github.com/gurusumiran25/pulseforge/actions/runs/46121166288) and [Gitleaks history scanning](https://github.com/gurusumiran25/pulseforge/actions/runs/46121418892). Synthetic portfolio demo only; official `v1.0.0` tag/release has not yet been published. See [release checklist](docs/RELEASE_CHECKLIST.md) for evidence limits.
