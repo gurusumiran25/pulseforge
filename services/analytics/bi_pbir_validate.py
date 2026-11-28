@@ -1,7 +1,9 @@
 """Validate generated PBIR documents against their declared Microsoft schemas."""
 import json
-from pathlib import Path
-from urllib.request import urlopen
+from functools import lru_cache
+from time import sleep
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 from jsonschema import validators
 from referencing import Registry, Resource
@@ -9,11 +11,19 @@ from referencing import Registry, Resource
 from services.analytics.bi_pbir import SCHEMA, report_sources
 
 
+@lru_cache(maxsize=128)
 def retrieve(uri):
     if not uri.startswith(SCHEMA):
         raise ValueError("Unexpected schema origin: " + uri)
-    with urlopen(uri, timeout=30) as response:
-        return Resource.from_contents(json.load(response))
+    for attempt in range(3):
+        try:
+            request = Request(uri, headers={"User-Agent": "PulseForge-PBIR-validator/1.1", "Accept": "application/json"})
+            with urlopen(request, timeout=30) as response:
+                return Resource.from_contents(json.load(response))
+        except (HTTPError, URLError):
+            if attempt == 2:
+                raise
+            sleep(2 ** attempt)
 
 
 def main():
