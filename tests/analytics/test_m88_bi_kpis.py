@@ -74,3 +74,41 @@ def test_observed_cohort_maturity():
     assert observed_retention(t, "2026-11-01", 7) == Decimal("0.5")
     assert observed_retention(t, "2026-11-09", 1) is None
     assert observed_retention(t, "2026-11-03", 1) is None
+
+
+from services.analytics.bi_kpis import period_metrics
+import pytest
+
+
+def period_tables():
+    return {
+        "DimDate.csv": b"date_utc\n2026-11-01\n2026-11-09\n",
+        "FactSession.csv": b"date_utc\n2026-11-04\n2026-11-05\n2026-11-07\n2026-11-08\n2026-11-09\n",
+    }
+
+
+def test_period_growth_and_rolling():
+    k = period_metrics(period_tables(), "2026-11-07", "2026-11-09")
+    assert k["sessions"] == 3
+    assert k["prior_sessions"] == 2
+    assert k["session_growth"] == Decimal("0.5")
+    assert k["rolling_7_day_average"] == Decimal(5) / 7
+
+
+def test_incomplete_history():
+    k = period_metrics(period_tables(), "2026-11-01", "2026-11-02")
+    assert k["prior_sessions"] is None
+    assert k["session_growth"] is None
+    assert k["rolling_7_day_average"] is None
+
+
+def test_zero_prior_sessions():
+    k = period_metrics(period_tables(), "2026-11-04", "2026-11-05")
+    assert k["prior_sessions"] == 0
+    assert k["session_growth"] is None
+
+
+@pytest.mark.parametrize("start,end", [("2026-11-09","2026-11-01"), ("2026-10-31","2026-11-02"), ("2026-11-09","2026-11-10")])
+def test_invalid_period(start, end):
+    with pytest.raises(ValueError):
+        period_metrics(period_tables(), start, end)
