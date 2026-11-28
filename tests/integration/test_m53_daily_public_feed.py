@@ -62,3 +62,26 @@ def test_daily_publication_quality_and_dates(tmp_path):
     with (snapshot / "DimProduct.csv").open(newline="") as handle:
         products = {r["product_id"] for r in csv.DictReader(handle)}
     assert all(r["product_id"] in products for r in views)
+
+
+    # M92: verify the same pinned snapshot through all reference gates.
+    from datetime import datetime, timezone
+    from services.analytics.bi_refresh import verify_refresh
+    from services.analytics.bi_kpis import reference_kpis
+    from services.analytics.bi_report import load_report, validate_report
+    from services.analytics.bi_navigation import load_layout, validate_layout
+
+    verified = verify_refresh(bi_root, now=datetime(2026, 11, 23, tzinfo=timezone.utc))
+    assert verified["snapshot"] == pointer["snapshot"]
+    tables = {name: (snapshot / name).read_bytes() for name in manifest["files"]}
+    kpis = reference_kpis(tables)
+    assert kpis["events"] == result["events"]
+    assert kpis["sessions"] == result["sessions"]
+    assert kpis["paid_sessions"] == result["paid_sessions"]
+    assert validate_report(load_report()) == 24
+    assert validate_layout(load_layout(), load_report()) == 7
+    # A corrupted immutable file must prevent refresh, without changing the pointer.
+    (snapshot / "FactEvent.csv").write_bytes(b"corrupt")
+    with pytest.raises(ValueError, match="integrity"):
+        verify_refresh(bi_root, now=datetime(2026, 11, 23, tzinfo=timezone.utc))
+    assert json.loads((bi_root / "current.json").read_text()) == pointer
